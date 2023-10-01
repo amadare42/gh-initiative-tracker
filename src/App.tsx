@@ -1,26 +1,52 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import logo from './logo.svg';
-import './App.css';
+import './App.scss';
+import { Charlist } from './Components/Charlist';
+import { DrawerContext } from './Components/Drawer';
+import { RoundCounter } from './Components/RoundCounter';
+import { ButtonsList } from './Components/ButtonsList';
+import { ManageButtons } from './Components/ManageButtons';
+import { useDispatch } from 'react-redux';
+import { connectAction, createRoomAction, joinRoomAction } from './store/serverConnectionSlice';
+import { store } from './store';
+import { ConnectionControl } from './Components/ConnectionControl';
+import { useDeeplink } from './deeplink';
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+
+    useDeeplink();
+
+    const [isDrawerOpened, setIsDrawerOpened] = useState(false);
+    return (
+        <div className="App">
+            <DrawerContext.Provider value={ { isDrawerOpened, setIsDrawerOpened } }>
+                <header className="App-header">
+                    <ConnectionControl/>
+                    <ManageButtons/>
+                    <RoundCounter/>
+                    <Charlist/>
+                    <ButtonsList/>
+                </header>
+            </DrawerContext.Provider>
+            <Debug/>
+        </div>
+    );
+}
+
+function Debug() {
+    const dispatch = useDispatch();
+    useEffect(() => {
+        window['wConnect'] = () => {
+            dispatch(connectAction() as any);
+        };
+        window['wJoin'] = (roomId: string) => {
+            dispatch(joinRoomAction({ roomId }) as any);
+        };
+        window['wCreate'] = () => {
+            dispatch(createRoomAction({ state: store.getState().initiative }) as any);
+        };
+    }, []);
+    return null;
 }
 
 export default App;

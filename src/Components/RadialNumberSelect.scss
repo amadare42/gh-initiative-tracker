@@ -1,0 +1,100 @@
+$size: '40vmin';
+$padding: '5vmin';
+
+.RadialNumberSelect {
+    &-wrapper {
+        position: absolute;
+        left: calc(#{$size} + #{$padding});
+    }
+
+    &-button {
+        background: beige;
+        border-radius: $padding;
+    }
+}
+
+
+.Drawer {
+
+    &-container {
+        position: absolute;
+        z-index: 999;
+        width: 100vmin;
+        height: 100vmin;
+        pointer-events: none;
+        overflow: hidden;
+    }
+
+    &-itemParent {
+        position: absolute;
+        margin: 10vmin;
+        width: 80vmin;
+        height: 80vmin;
+        transition: all 0.3s;
+        pointer-events: none;
+    }
+
+    &-centeredContainer {
+        transform: translate(calc(25vmin), calc(33vmin));
+        pointer-events: all;
+        height: 40vmin;
+        width: 50vmin;
+        //background: #ffffff11;
+        font-size: 7vmin;
+        display: flex;
+        justify-content: center;
+        flex-direction: column;
+        opacity: 0;
+        transition: opacity 0.3s;
+        text-shadow: #000 0 0 10px;
+
+        &.isOpen {
+            opacity: 1;
+        }
+    }
+
+    &-item {
+        position: absolute;
+        padding: 0;
+        pointer-events: all;
+        z-index: 1000;
+        transform: translate(calc(40vmin - 50%), calc(-50%));
+
+        width: 14vmin;
+        height: 14vmin;
+        text-align: center;
+        vertical-align: middle;
+        line-height: 14vmin;
+        font-size: 7vmin;
+        /*border: 0.1vmin solid white;*/
+        border-radius: 14vmin;
+        transition: all 0.4s;
+        margin: auto;
+        background: #00000077;
+        user-select: none;
+        box-shadow: 0 0 0.5vmin 0.5vmin #33333333;
+        // blur what is behind
+        backdrop-filter: blur(5px);
+
+        &:active {
+            animation: Drawer-item-hover linear 0.6s forwards;
+            /*background: #ffffff55;*/
+        }
+    }
+}
+
+.darken {
+    opacity: 0.3;
+}
+
+@keyframes Drawer-item-hover {
+    0% {
+        background: transparent;
+    }
+    50% {
+        background: #ffffff55;
+    }
+    100% {
+        background: transparent;
+    }
+}

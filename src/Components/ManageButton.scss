@@ -1,0 +1,11 @@
+.ManageButtons-wrapper {
+  position: absolute;
+  top: 0.7em;
+  right: 0.7em;
+  font-size: 2em;
+  cursor: pointer;
+
+  &.disabled {
+    opacity: 0.5;
+  }
+}

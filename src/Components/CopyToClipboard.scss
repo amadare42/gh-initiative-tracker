@@ -1,0 +1,25 @@
+.CopyToClipboard-copied {
+  font-size: 0.8em;
+  margin-left: 0.5em;
+  opacity: 0;
+
+  &.shown {
+    opacity: 1;
+  }
+
+  &.hidden {
+    transition: all 2s ease-in-out;
+  }
+
+  @keyframes fadeOut {
+    0% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+}
