@@ -60,22 +60,28 @@ export function Drawer({ name, initialValue, onValueSet }: DrawerProps) {
     let onMouseUp = useMemo<MouseEventHandler<HTMLDivElement>>(() => (ev) => {
         let elem = ev.currentTarget.closest('.Drawer-numItem') as HTMLDivElement | null;
         if (elem === firstElementRef.current) {
+            firstElementRef.current = null;
             return;
         }
+        firstElementRef.current = null;
         activateNumItem(elem);
     }, [activateNumItem]);
     let onTouchEnd = useMemo<TouchEventHandler<HTMLDivElement>>(() => (ev) => {
         const touch = ev.changedTouches[0];
         if (!touch) return;
 
-        const elem = document.elementFromPoint(touch.clientX, touch.clientY)?.closest('.Drawer-numItem') as HTMLDivElement | null;
+        const elem = document.elementFromPoint(touch.clientX, touch.clientY)
+            ?.closest('.Drawer-numItem') as HTMLDivElement | null;
         if (elem === firstElementRef.current) {
+            firstElementRef.current = null;
             return;
         }
         activateNumItem(elem);
         firstElementRef.current = null;
     }, [activateNumItem]);
-    let onMouseLeave = useMemo<MouseEventHandler<HTMLDivElement>>(() => (ev) => firstElementRef.current = null, []);
+    let onMouseLeave = useMemo<MouseEventHandler<HTMLDivElement>>(() => (ev) => {
+        firstElementRef.current = null;
+    }, []);
     const onTouchMove = useMemo<TouchEventHandler<HTMLDivElement>>(() => (ev) => {
         if (!firstElementRef.current) return;
 
@@ -100,6 +106,8 @@ export function Drawer({ name, initialValue, onValueSet }: DrawerProps) {
                                    onMouseDown={onMouseDown}
                                    onMouseLeave={onMouseLeave}
                                    onTouchMove={onTouchMove}
+                                   onTouchEnd={onTouchEnd}
+                                   onMouseUp={onMouseUp}
                                    className={classNames('Drawer-numItem', { darken: isDone })}>
                     <span>{ k }</span>
                     <span className={ 'darken' }>0</span>
@@ -108,6 +116,8 @@ export function Drawer({ name, initialValue, onValueSet }: DrawerProps) {
                 : (o: any) => <div data-num={k}
                                    key={k}
                                    onTouchEnd={onTouchEnd}
+                                   onTouchMove={onTouchMove}
+                                   onMouseLeave={onMouseLeave}
                                    onMouseUp={onMouseUp}
                                    className={classNames('Drawer-numItem', { darken: isDone })}>
                     <span className={ 'darken' }>{ total }</span>

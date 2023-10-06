@@ -51,8 +51,8 @@ export function ElementsPanel() {
 
     return <div className={ 'ElementsPanel-wrapper' }>
         {
-            editState ? <div className={"ElementsPanel-VisibilityBtn"} onClick={toggleDisplayElements}>
-                { displayElements ? <FaEyeLowVision  /> : <FaEye /> }
+            editState ? <div className={ 'ElementsPanel-VisibilityBtn' } onClick={ toggleDisplayElements }>
+                { displayElements ? <FaEyeLowVision/> : <FaEye/> }
             </div> : null
         }
         { shouldDisplay ? (isHistoryMode ? historyStates : elements).map((state, index) =>
@@ -75,13 +75,17 @@ function ElementIcon({ index, state, inHistory }: { index: number, state: Elemen
             dispatch(initiativeSliceActions.setElementState({ element: index, state: ElementState.Inert }));
         }
     }, [index, state, inHistory]);
-    const setWaning = useCallback(() => {
+    const setWaning = useCallback((e) => {
+        e.preventDefault();
         if (inHistory) return;
 
         dispatch(initiativeSliceActions.setElementState({ element: index, state: ElementState.Waning }));
     }, [index, state, inHistory]);
 
     const handlers = useLongPress(setWaning, activateElement);
+    const preventDefault = useCallback((e) => {
+        e.preventDefault();
+    }, []);
 
     return <div className={ classNames('ElementsPanel-ElementIcon', {
         strong: state === ElementState.Strong,
@@ -91,12 +95,15 @@ function ElementIcon({ index, state, inHistory }: { index: number, state: Elemen
         fire: index === 2,
     }) } key={ index } { ...handlers }>
         <img className={ 'outline' }
+             onContextMenu={ preventDefault }
              src={ ELEMENTS[index].url }
              alt={ ELEMENTS[index].name }/>
         <img className={ 'waning_bkg' }
+             onContextMenu={ preventDefault }
              src={ ELEMENTS[index].url }
              alt={ ELEMENTS[index].name }/>
         <img className={ 'main' }
-            src={ ELEMENTS[index].url } alt={ ELEMENTS[index].name }/>
+             onContextMenu={ preventDefault }
+             src={ ELEMENTS[index].url } alt={ ELEMENTS[index].name }/>
     </div>
 }
