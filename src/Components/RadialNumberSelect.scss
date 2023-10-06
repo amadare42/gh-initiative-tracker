@@ -16,6 +16,10 @@ $padding: '5vmin';
 
 .Drawer {
 
+    &-numItem {
+        touch-action: none;
+    }
+
     &-container {
         position: absolute;
         z-index: 999;

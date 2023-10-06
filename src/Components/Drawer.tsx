@@ -1,5 +1,15 @@
-import { createContext, MouseEventHandler, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import {
+    createContext,
+    MouseEventHandler,
+    TouchEventHandler,
+    useCallback,
+    useContext,
+    useEffect,
+    useMemo, useRef,
+    useState
+} from 'react';
 import "./RadialNumberSelect.scss";
+import classNames from 'classnames';
 
 export interface DrawerProps {
     name: string;
@@ -22,37 +32,84 @@ export function Drawer({ name, initialValue, onValueSet }: DrawerProps) {
         }
     }, []);
 
-    let onNumberClick = useMemo<MouseEventHandler<HTMLDivElement>>(() => (ev) => {
-        let n = parseInt(ev.currentTarget.getAttribute("data-num"));
+    let firstElementRef = useRef<HTMLDivElement>(null);
+    let activateNumItem = useCallback((target: HTMLDivElement) => {
+        let n = parseInt(target.getAttribute("data-num"));
         if (!isSecond) {
             setTotal(n);
             setIsSecond(true);
         } else {
+            firstElementRef.current = null;
             onValueSet(total * 10 + n);
         }
     }, [total, isSecond, onValueSet]);
+
     const onMouseDown = useMemo<MouseEventHandler<HTMLDivElement>>(() => (ev) => {
-        ev.currentTarget.setAttribute('already-activated', 'true');
-        onNumberClick(ev);
-    }, [onNumberClick]);
-    let onMouseUp = useMemo<MouseEventHandler<HTMLDivElement>>(() => (ev) => {
-        if (ev.currentTarget.getAttribute('already-activated') === 'true') {
+        firstElementRef.current = ev.currentTarget.closest('.Drawer-numItem');
+        activateNumItem(firstElementRef.current);
+    }, [activateNumItem]);
+    const onTouchStart = useMemo<TouchEventHandler<HTMLDivElement>>(() => (ev) => {
+        if (firstElementRef.current) {
             return;
         }
-        onNumberClick(ev);
-    }, [onNumberClick]);
-    let onLeave = useMemo<MouseEventHandler<HTMLDivElement>>(() => (ev) => {
-        ev.currentTarget.setAttribute('already-activated', 'false');
-    }, []);
+        const touch = ev.touches[0];
+        const elem = document.elementFromPoint(touch.clientX, touch.clientY)
+            ?.closest('.Drawer-numItem') as HTMLDivElement | null;
+        firstElementRef.current = elem;
+    }, [activateNumItem]);
+    let onMouseUp = useMemo<MouseEventHandler<HTMLDivElement>>(() => (ev) => {
+        let elem = ev.currentTarget.closest('.Drawer-numItem') as HTMLDivElement | null;
+        if (elem === firstElementRef.current) {
+            return;
+        }
+        activateNumItem(elem);
+    }, [activateNumItem]);
+    let onTouchEnd = useMemo<TouchEventHandler<HTMLDivElement>>(() => (ev) => {
+        const touch = ev.changedTouches[0];
+        if (!touch) return;
+
+        const elem = document.elementFromPoint(touch.clientX, touch.clientY)?.closest('.Drawer-numItem') as HTMLDivElement | null;
+        if (elem === firstElementRef.current) {
+            return;
+        }
+        activateNumItem(elem);
+        firstElementRef.current = null;
+    }, [activateNumItem]);
+    let onMouseLeave = useMemo<MouseEventHandler<HTMLDivElement>>(() => (ev) => firstElementRef.current = null, []);
+    const onTouchMove = useMemo<TouchEventHandler<HTMLDivElement>>(() => (ev) => {
+        if (!firstElementRef.current) return;
+
+        const touch = ev.touches[0];
+        const elem = document.elementFromPoint(touch.clientX, touch.clientY)?.closest('.Drawer-numItem');
+        if (elem === firstElementRef.current) {
+            return;
+        }
+        activateNumItem(firstElementRef.current);
+        firstElementRef.current = null;
+    }, [activateNumItem]);
+
+    const evts = [onMouseUp, onTouchStart, onTouchEnd, onMouseDown, onMouseLeave, onTouchMove];
 
     let items = useMemo(() => {
         let buttons = Array.from({ length: 10 }, (v, k) => {
             let render = !isSecond
-                ? (o: any) => <div data-num={k} onMouseLeave={onLeave} onMouseDown={onMouseDown} onMouseUp={onMouseUp} className={isDone ? 'darken' : ''}>
+                // first
+                ? (o: any) => <div data-num={k}
+                                   key={k}
+                                   onTouchStart={onTouchStart}
+                                   onMouseDown={onMouseDown}
+                                   onMouseLeave={onMouseLeave}
+                                   onTouchMove={onTouchMove}
+                                   className={classNames('Drawer-numItem', { darken: isDone })}>
                     <span>{ k }</span>
                     <span className={ 'darken' }>0</span>
                 </div>
-                : (o: any) => <div data-num={k} onMouseLeave={onLeave} onMouseDown={onMouseDown} onMouseUp={onMouseUp} className={isDone ? 'darken' : ''}>
+                // second
+                : (o: any) => <div data-num={k}
+                                   key={k}
+                                   onTouchEnd={onTouchEnd}
+                                   onMouseUp={onMouseUp}
+                                   className={classNames('Drawer-numItem', { darken: isDone })}>
                     <span className={ 'darken' }>{ total }</span>
                     <span>{k}</span>
                 </div>
@@ -67,7 +124,7 @@ export function Drawer({ name, initialValue, onValueSet }: DrawerProps) {
         buttons.push(buttons.shift()!);
 
         return buttons;
-    }, [isSecond, total, onNumberClick, isDone]);
+    }, [isSecond, total, isDone, ...evts]);
 
     let onCancel = useCallback(() => {
         onValueSet(initialValue)
