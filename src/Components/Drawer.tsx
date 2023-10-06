@@ -31,15 +31,28 @@ export function Drawer({ name, initialValue, onValueSet }: DrawerProps) {
             onValueSet(total * 10 + n);
         }
     }, [total, isSecond, onValueSet]);
+    const onMouseDown = useMemo<MouseEventHandler<HTMLDivElement>>(() => (ev) => {
+        ev.currentTarget.setAttribute('already-activated', 'true');
+        onNumberClick(ev);
+    }, [onNumberClick]);
+    let onMouseUp = useMemo<MouseEventHandler<HTMLDivElement>>(() => (ev) => {
+        if (ev.currentTarget.getAttribute('already-activated') === 'true') {
+            return;
+        }
+        onNumberClick(ev);
+    }, [onNumberClick]);
+    let onLeave = useMemo<MouseEventHandler<HTMLDivElement>>(() => (ev) => {
+        ev.currentTarget.setAttribute('already-activated', 'false');
+    }, []);
 
     let items = useMemo(() => {
         let buttons = Array.from({ length: 10 }, (v, k) => {
             let render = !isSecond
-                ? (o: any) => <div data-num={k} onClick={onNumberClick} className={isDone ? 'darken' : ''}>
+                ? (o: any) => <div data-num={k} onMouseLeave={onLeave} onMouseDown={onMouseDown} onMouseUp={onMouseUp} className={isDone ? 'darken' : ''}>
                     <span>{ k }</span>
                     <span className={ 'darken' }>0</span>
                 </div>
-                : (o: any) => <div data-num={k} onClick={onNumberClick} className={isDone ? 'darken' : ''}>
+                : (o: any) => <div data-num={k} onMouseLeave={onLeave} onMouseDown={onMouseDown} onMouseUp={onMouseUp} className={isDone ? 'darken' : ''}>
                     <span className={ 'darken' }>{ total }</span>
                     <span>{k}</span>
                 </div>

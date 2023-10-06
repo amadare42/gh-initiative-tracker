@@ -86,13 +86,17 @@
     }
 
     & .outline {
-      cursor: pointer;
       opacity: 1;
-      filter: invert(100%) saturate(0);
+      filter: invert(100%) saturate(0) brightness(500%);
     }
 
     &.dark:not(.inert) .outline {
+      transition: none;
       filter: invert(100%) saturate(0) blur(1px) !important;
+    }
+
+    &.fire.inert .outline {
+      filter: invert(100%) brightness(150%) saturate(0%) !important;
     }
   }
 }

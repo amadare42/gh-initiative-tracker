@@ -88,6 +88,7 @@ function ElementIcon({ index, state, inHistory }: { index: number, state: Elemen
         waning: state === ElementState.Waning,
         inert: state === ElementState.Inert,
         dark: index === 5,
+        fire: index === 2,
     }) } key={ index } { ...handlers }>
         <img className={ 'outline' }
              src={ ELEMENTS[index].url }
