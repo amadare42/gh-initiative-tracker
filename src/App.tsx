@@ -11,6 +11,7 @@ import { connectAction, createRoomAction, joinRoomAction } from './store/serverC
 import { store } from './store';
 import { ConnectionControl } from './Components/ConnectionControl';
 import { useDeeplink } from './deeplink';
+import { ElementsPanel } from './Components/ElementsPanel';
 
 function App() {
 
@@ -24,6 +25,7 @@ function App() {
                     <ConnectionControl/>
                     <ManageButtons/>
                     <RoundCounter/>
+                    <ElementsPanel />
                     <Charlist/>
                     <ButtonsList/>
                 </header>

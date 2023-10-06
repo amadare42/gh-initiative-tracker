@@ -1,11 +1,18 @@
 import { createAction, createAsyncThunk, createSelector, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { createAppSelector, RootState, store, useAppSelector } from './index';
 import { createAppAsyncThunk } from './createAppAsyncThunk';
-import { pushRoomStateAction } from './serverConnectionSlice';
 
 export interface HistoryEntry {
     round: number;
     characters: HistoryCharacter[];
+    elementStates: ElementState[];
+}
+
+const ElementsCount = 6;
+export enum ElementState {
+    Inert,
+    Waning,
+    Strong
 }
 
 export interface HistoryCharacter {
@@ -32,6 +39,7 @@ export interface InitiativeState {
     nextCharacterId: number;
     activeCharacterId: number;
     round: number;
+    elementStates: ElementState[];
 }
 
 const initCharacters: Character[] = [
@@ -52,7 +60,8 @@ const initialState: InitiativeState = {
     activeCharacterId: -1,
     nextCharacterId: initCharacters.length,
     round: 1,
-    history: []
+    history: [],
+    elementStates: Array.from({ length: ElementsCount }, () => ElementState.Inert)
 }
 export const toggleDisabledAction = createAction<number>('toggleDisabled');
 export const deleteCharacterAction = createAction<number>('deleteCharacter');
@@ -160,7 +169,12 @@ export const initiativeSlice = createSlice({
             }
             character.ownerId = action.payload.ownerId;
         },
-
+        setElementState: (state, action: { payload: { element: number, state: ElementState } }) => {
+            state.elementStates[action.payload.element] = action.payload.state;
+        },
+        setElements: (state, action: { payload: ElementState[] }) => {
+            state.elementStates = action.payload;
+        },
         nextRound: (state) => {
             state.history = getUpdatedHistory(state);
             state.round++;
@@ -173,7 +187,7 @@ export const initiativeSlice = createSlice({
                     secondaryInitiative: null
                 }
             });
-
+            state.elementStates = state.elementStates.map(e => Math.max(e - 1, ElementState.Inert));
         },
 
         changeRound: (state, action: PayloadAction<number>) => {
@@ -195,6 +209,7 @@ export const initiativeSlice = createSlice({
             state.activeCharacterId = action.payload.activeCharacterId;
             state.nextCharacterId = action.payload.nextCharacterId;
             state.round = action.payload.round;
+            state.elementStates = action.payload.elementStates;
         },
 
         clearAll: (state) => {
@@ -202,6 +217,7 @@ export const initiativeSlice = createSlice({
             state.activeCharacterId = -1;
             state.nextCharacterId = 0;
             state.round = 1;
+            state.elementStates = Array.from({ length: ElementsCount }, () => ElementState.Inert);
         },
         clearOwner: (state, action: PayloadAction<string>) => {
             state.characters = state.characters.map(actor => ({
@@ -221,7 +237,8 @@ function getUpdatedHistory(state: InitiativeState) {
             initiative: actor.initiative ?? 0,
             secondaryInitiative: actor.secondaryInitiative ?? 0,
             isEnemy: actor.isEnemy
-        }))
+        })),
+        elementStates: state.elementStates.map(e => e)
     }
 
     const existingEntryIdx = history.findIndex(entry => entry.round === historyEntry.round);

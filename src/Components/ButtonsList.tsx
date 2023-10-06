@@ -1,11 +1,11 @@
 import React, { useCallback } from 'react';
 import { store, useAppDispatch, useAppSelector } from '../store';
 import {
-    addActor, initiativeSliceActions,
+    addActor,
     isInitiativeReadySelector,
     isLastActorSelector,
     nextCharacter,
-    nextRound, updateActor,
+    nextRound,
     useSelectedInitiativeState
 } from '../store/initiativeSlice';
 import { uiStateActions } from '../store/uiStateSlice';
@@ -22,6 +22,7 @@ export function ButtonsList() {
         }));
     }, []);
     const inHistoryMode = useAppSelector(state => state.ui.isInHistoryMode);
+    const round = useAppSelector(state => state.initiative.round);
     const toggleHistoryMode = useCallback(() => {
         const state = store.getState();
         if (state.ui.isInHistoryMode) {
@@ -36,7 +37,7 @@ export function ButtonsList() {
             <button className={ 'Charlist-button' } onClick={ () => addChar(true) }>Add Enemy</button> : null }
         { showControls ?
             <button className={ 'Charlist-button' } onClick={ () => addChar(false) }>Add Player</button> : null }
-        { showControls ?
+        { showControls && round > 1 ?
             <button className={ 'Charlist-button' } onClick={ () => toggleHistoryMode() }>Toggle History</button> : null }
 
         {

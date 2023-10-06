@@ -3,6 +3,7 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 const initialState = {
     isExtraControlsVisible: false,
     isInHistoryMode: false,
+    displayElements: true,
     historyRound: -1
 }
 
@@ -18,6 +19,12 @@ export const uiStateSlice = createSlice({
         },
         setHistoryRound: (state, action: PayloadAction<number>) => {
             state.historyRound = action.payload;
+        },
+        setDisplayElements: (state, action: PayloadAction<boolean>) => {
+            state.displayElements = action.payload;
+        },
+        toggleDisplayElements: (state) => {
+            state.displayElements = !state.displayElements;
         },
         historyBack: (state, action: PayloadAction<{ currentRound: number}>) => {
             if (state.isInHistoryMode) {

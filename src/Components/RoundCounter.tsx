@@ -1,6 +1,6 @@
 import { store, useAppDispatch, useAppSelector } from '../store';
-import { initiativeSliceActions, isInitiativeReadySelector, useSelectedInitiativeState } from '../store/initiativeSlice';
-import { FaHistory, FaMinus, FaMinusCircle, FaPlusCircle } from 'react-icons/fa';
+import { initiativeSliceActions } from '../store/initiativeSlice';
+import { FaHistory, FaMinusCircle, FaPlusCircle } from 'react-icons/fa';
 import classNames from 'classnames';
 import { uiStateActions } from '../store/uiStateSlice';
 
