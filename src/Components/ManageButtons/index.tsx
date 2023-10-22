@@ -1,7 +1,7 @@
-import './ManageButton.scss'
+import './styles.scss'
 import { FaCog, FaEdit, FaHistory } from 'react-icons/fa';
-import { useAppDispatch, useAppSelector } from '../store';
-import { uiStateActions } from '../store/uiStateSlice';
+import { useAppDispatch, useAppSelector } from '../../store';
+import { uiStateActions } from '../../store/uiStateSlice';
 import classNames from 'classnames';
 
 export function ManageButtons() {
@@ -13,5 +13,3 @@ export function ManageButtons() {
         <FaEdit onClick={ toggleExtraControls } />
     </div>
 }
-
-

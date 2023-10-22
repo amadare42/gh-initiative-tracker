@@ -1,12 +1,12 @@
-import { useAppDispatch, useAppSelector } from '../store';
-import './ElementsPanel.scss';
-import { ElementState, initiativeSliceActions } from '../store/initiativeSlice';
+import { useAppDispatch, useAppSelector } from '../../store';
+import './styles.scss';
+import { ElementState, initiativeSliceActions } from '../../store/initiativeSlice';
 import classNames from 'classnames';
 import { useCallback, useEffect, useMemo } from 'react';
-import useLongPress from '../utils/useLongPress';
+import useLongPress from '../../utils/useLongPress';
 import { FaEyeLowVision } from 'react-icons/fa6';
 import { FaEye } from 'react-icons/fa';
-import { uiStateActions } from '../store/uiStateSlice';
+import { uiStateActions } from '../../store/uiStateSlice';
 
 export const ELEMENTS = [
     'Wind', 'Ice', 'Fire', 'Earth', 'Light', 'Dark'
@@ -70,8 +70,10 @@ function ElementIcon({ index, state, inHistory }: { index: number, state: Elemen
         if (inHistory) return;
 
         if (state === ElementState.Inert) {
+            navigator.vibrate([10, 30, 20, 10]);
             dispatch(initiativeSliceActions.setElementState({ element: index, state: ElementState.Strong }));
         } else {
+            navigator.vibrate([10, 10]);
             dispatch(initiativeSliceActions.setElementState({ element: index, state: ElementState.Inert }));
         }
     }, [index, state, inHistory]);
@@ -79,6 +81,7 @@ function ElementIcon({ index, state, inHistory }: { index: number, state: Elemen
         e.preventDefault();
         if (inHistory) return;
 
+        navigator.vibrate([10, 10]);
         dispatch(initiativeSliceActions.setElementState({ element: index, state: ElementState.Waning }));
     }, [index, state, inHistory]);
 
@@ -95,14 +98,17 @@ function ElementIcon({ index, state, inHistory }: { index: number, state: Elemen
         fire: index === 2,
     }) } key={ index } { ...handlers }>
         <img className={ 'outline' }
+             draggable={false}
              onContextMenu={ preventDefault }
              src={ ELEMENTS[index].url }
              alt={ ELEMENTS[index].name }/>
         <img className={ 'waning_bkg' }
+             draggable={false}
              onContextMenu={ preventDefault }
              src={ ELEMENTS[index].url }
              alt={ ELEMENTS[index].name }/>
         <img className={ 'main' }
+             draggable={false}
              onContextMenu={ preventDefault }
              src={ ELEMENTS[index].url } alt={ ELEMENTS[index].name }/>
     </div>

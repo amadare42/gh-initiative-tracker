@@ -1,9 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import FlipMove from 'react-flip-move';
-import { useAppDispatch, useAppSelector } from '../store';
+import { useAppDispatch, useAppSelector } from '../../store';
 import {
     initiativeSliceActions as sliceActions,
-    addActor,
     isInitiativeReadySelector,
     updateActor,
     useSelectedInitiativeState,
@@ -11,9 +10,10 @@ import {
     setInitiativeAction,
     isAllPlayersInitiativeReadySelector,
     Character
-} from '../store/initiativeSlice';
-import { ButtonsList } from './ButtonsList';
-import { CharItem } from './CharItem';
+} from '../../store/initiativeSlice';
+import { CharItem } from '../CharItem';
+
+import './styles.scss';
 
 function nop() {
 }
@@ -105,4 +105,3 @@ function hideInitiativePredicate(char: Character, isPlayerInitiativeReady: boole
 
     return !isInitiativeReady;
 }
-

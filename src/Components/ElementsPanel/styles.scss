@@ -52,6 +52,7 @@
       &.dark {
         img {
           filter: grayscale(100%) invert(30%);
+          opacity: 0.18;
         }
       }
 
@@ -79,20 +80,31 @@
       }
 
       .waning_bkg {
-        opacity: 0.5;
+        opacity: 0;
         // crop in half, leaving only the bottom half
         clip-path: inset(50% 0 0 0);
       }
     }
 
     & .outline {
-      opacity: 1;
+      opacity: 0.15;
       filter: invert(100%) saturate(0) brightness(500%);
     }
 
     &.dark:not(.inert) .outline {
       transition: none;
-      filter: invert(100%) saturate(0) blur(1px) !important;
+      filter: invert(100%) saturate(0) blur(0.5vmin) !important;
+    }
+
+    &.dark.waning > .outline {
+      clip-path: inset(0 0 50% 0);
+      opacity: 1;
+    }
+
+    &.dark.waning > .waning_bkg {
+      opacity: .3;
+      clip-path: inset(50% 0 0 0);
+      filter: grayscale(100%) invert(30%);
     }
 
     &.fire.inert .outline {

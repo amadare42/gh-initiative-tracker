@@ -61,7 +61,7 @@ const initialState: InitiativeState = {
     nextCharacterId: initCharacters.length,
     round: 1,
     history: [],
-    elementStates: Array.from({ length: ElementsCount }, () => ElementState.Inert)
+    elementStates: Array.from({ length: ElementsCount }, () => ElementState.Waning)
 }
 export const toggleDisabledAction = createAction<number>('toggleDisabled');
 export const deleteCharacterAction = createAction<number>('deleteCharacter');

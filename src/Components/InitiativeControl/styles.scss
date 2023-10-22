@@ -1,0 +1,27 @@
+// circle
+.InitiativeControl {
+
+  &-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0.5rem 1rem 0.5rem 0.5rem;
+
+
+    &.started {
+      opacity: 0.7;
+    }
+  }
+
+  &-number {
+    //position: absolute;
+    padding-right: 1rem;
+    border-right: 1px solid #ccc;
+  }
+
+  &-circle {
+    width: calc(5vmin + 1rem);
+    height: calc(5vmin + 1rem);
+    position: absolute;
+  }
+}

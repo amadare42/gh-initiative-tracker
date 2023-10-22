@@ -1,0 +1,15 @@
+.RoundCounter-wrapper {
+  display: flex;
+  justify-items: center;
+  align-items: center;
+  gap: 1rem;
+  user-select: none;
+
+  &.history::after {
+    content: '(history)';
+    position: absolute;
+    margin-top: 6rem;
+    margin-left: 6rem;
+    color: #cccccc88;
+  }
+}

@@ -3,6 +3,9 @@ import { initiativeSliceActions, InitiativeState } from './initiativeSlice';
 import { createAction, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { CallbackEvent } from '../utils/callbackEvent';
 
+import * as jsonPatch from 'fast-json-patch';
+
+
 const MESSAGE_COUNT = 10;
 // const SERVER_URL = 'ws://localhost:3001/ws';
 const SERVER_URL = 'wss://api.turns.amadare.top';
@@ -10,11 +13,15 @@ const SERVER_URL = 'wss://api.turns.amadare.top';
 function getConnectionId() {
     let value = localStorage.getItem('store.serverConnection.connectionId');
     if (!value || value == 'null') {
-        value = generateConnectionId();
-        localStorage.setItem('store.serverConnection.connectionId', value);
-        return value;
+        return initConnectionId();
     }
     return value;
+}
+
+function initConnectionId() {
+    const connectionId = generateConnectionId();
+    localStorage.setItem('store.serverConnection.connectionId', connectionId);
+    return connectionId;
 }
 
 function generateConnectionId() {
@@ -43,7 +50,8 @@ export type WsMessage =
     | WsMessageBase<'room.leave'>
     | WsMessageBase<'room.update', { state: InitiativeState }>
     | WsMessageBase<'connection.setId', { id: string }>
-    | WsMessageBase<'room.requestUpdate', { roomId: string }>;
+    | WsMessageBase<'room.requestUpdate', { roomId: string }>
+    | WsMessageBase<'room.patch', { roomId: string, hash: string, patch: jsonPatch.Operation[] }>;
 export type PayloadFor<Type extends WsMessage['type']> = Extract<WsMessage, { type: Type }>['payload'];
 
 
@@ -152,7 +160,6 @@ export const disconnectAction = createAppAsyncThunk('disconnect', async (_: void
     clearInterval(reconnectInterval);
     dispatch(serverConnectionSliceActions.setWsActive(false));
     dispatch(serverConnectionSliceActions.disconnected());
-    dispatch(serverConnectionSliceActions.setConnectionId(null));
     dispatch(serverConnectionSliceActions.setRoomId(null));
 });
 
@@ -209,6 +216,19 @@ export const onMessageAction = createAppAsyncThunk('onMessage', async ({ message
                 sendMsg('room.update', { state: roomState });
                 break;
             }
+
+            case 'connection.idSet': {
+                const { id } = message.data;
+                dispatch(serverConnectionSliceActions.setConnectionId(id));
+                break;
+            }
+
+            case 'room.patch.hashMismatch': {
+                const { roomState } = message.data;
+                dispatch(initiativeSliceActions.applyState(roomState));
+                dispatch(serverConnectionSliceActions.addMessage(`Please try again`));
+                break;
+            }
         }
     }
 );
@@ -226,6 +246,13 @@ export const joinRoomAction = createAppAsyncThunk(
 export const pushRoomStateAction = createAppAsyncThunk(
     'pushRoomState',
     async (payload: PayloadFor<'room.update'>) => sendMsg('room.update', payload));
+
+export const refreshClientIdAction = createAppAsyncThunk(
+    'refreshClientId',
+    async (_: void, { dispatch, getState }) => {
+        const connectionId = initConnectionId();
+        dispatch(serverConnectionSliceActions.setConnectionId(connectionId));
+    });
 
 export const serverConnectionSlice = createSlice({
     name: 'serverConnection',

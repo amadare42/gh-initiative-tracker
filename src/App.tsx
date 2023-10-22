@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import logo from './logo.svg';
 import './App.scss';
 import { Charlist } from './Components/Charlist';
-import { DrawerContext } from './Components/Drawer';
+import { DrawerContext } from './Components/RadialNumberSelect';
 import { RoundCounter } from './Components/RoundCounter';
 import { ButtonsList } from './Components/ButtonsList';
 import { ManageButtons } from './Components/ManageButtons';
@@ -10,7 +10,7 @@ import { useDispatch } from 'react-redux';
 import { connectAction, createRoomAction, joinRoomAction } from './store/serverConnectionSlice';
 import { store } from './store';
 import { ConnectionControl } from './Components/ConnectionControl';
-import { useDeeplink } from './deeplink';
+import { useDeeplink } from './hooks/deeplink';
 import { ElementsPanel } from './Components/ElementsPanel';
 
 function App() {

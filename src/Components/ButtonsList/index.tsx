@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { store, useAppDispatch, useAppSelector } from '../store';
+import { store, useAppDispatch, useAppSelector } from '../../store';
 import {
     addActor,
     isInitiativeReadySelector,
@@ -7,8 +7,10 @@ import {
     nextCharacter,
     nextRound,
     useSelectedInitiativeState
-} from '../store/initiativeSlice';
-import { uiStateActions } from '../store/uiStateSlice';
+} from '../../store/initiativeSlice';
+import { uiStateActions } from '../../store/uiStateSlice';
+
+import './styles.scss'
 
 export function ButtonsList() {
     const dispatch = useAppDispatch();

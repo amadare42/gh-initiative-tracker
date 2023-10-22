@@ -2,7 +2,9 @@ import { createListenerMiddleware } from '@reduxjs/toolkit';
 import { pushRoomStateAction } from './serverConnectionSlice';
 import { store } from './index';
 
-const pushState = () => store.dispatch(pushRoomStateAction({ state: store.getState().initiative }));
+const pushState = () => store.dispatch(pushRoomStateAction({
+    state: store.getState().initiative
+}));
 const throttledPushState = () => {
     if (pushStateTimeout) {
         clearTimeout(pushStateTimeout);

@@ -2,7 +2,7 @@ import {
     Character, initiativeSliceActions,
     removeActor,
     toggleDisabledAction
-} from '../store/initiativeSlice';
+} from '../../store/initiativeSlice';
 import React, {
     DOMAttributes,
     ForwardedRef,
@@ -13,11 +13,13 @@ import React, {
     useMemo,
     useRef
 } from 'react';
-import useLongPress from '../utils/useLongPress';
+import useLongPress from '../../utils/useLongPress';
 import classNames from 'classnames';
-import { InitiativeControl } from './InitiativeControl';
+import { InitiativeControl } from '../InitiativeControl';
 import { FaCheckCircle, FaTimesCircle, FaTrash } from 'react-icons/fa';
-import { useAppDispatch } from '../store';
+import { useAppDispatch } from '../../store';
+
+import './styles.scss';
 
 export interface CharItemProps {
     name: string;

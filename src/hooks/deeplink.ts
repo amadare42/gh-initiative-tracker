@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
-import { store, useAppDispatch, useAppSelector } from './store';
-import { ensureConnectionAction, joinRoomAction } from './store/serverConnectionSlice';
+import { store, useAppDispatch, useAppSelector } from '../store';
+import { ensureConnectionAction, joinRoomAction } from '../store/serverConnectionSlice';
 
 export function useDeeplink() {
     const dispatch = useAppDispatch();

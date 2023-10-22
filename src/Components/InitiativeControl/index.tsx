@@ -1,6 +1,8 @@
-import React, { useCallback, useMemo, useState } from 'react';
-import { Drawer } from './Drawer';
+import React, { useCallback, useState } from 'react';
+import { RadialNumberSelect } from '../RadialNumberSelect';
 import { createPortal } from 'react-dom';
+
+import './styles.scss';
 
 export interface InitiativeControlProps {
     name: string;
@@ -34,9 +36,9 @@ export function InitiativeControl({
         <div
             className={ 'InitiativeControl-number' }>{ getInitiativeDisplay(initiativeToChange, hideInitiative) }</div>
         { isSetting ? createPortal(<div className={ 'overlay' }/>, document.querySelector('.App-header')) : null }
-        { isSetting ? createPortal(<Drawer initialValue={ initiativeToChange }
-                                           name={ name }
-                                           onValueSet={ onInitiativeSet }/>, document.querySelector('.App-header')) : null }
+        { isSetting ? createPortal(<RadialNumberSelect initialValue={ initiativeToChange }
+                                                       name={ name }
+                                                       onValueSet={ onInitiativeSet }/>, document.querySelector('.App-header')) : null }
     </div>
 }
 

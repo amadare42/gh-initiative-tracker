@@ -8,7 +8,7 @@ import {
     useMemo, useRef,
     useState
 } from 'react';
-import "./RadialNumberSelect.scss";
+import './styles.scss';
 import classNames from 'classnames';
 
 export interface DrawerProps {
@@ -17,7 +17,7 @@ export interface DrawerProps {
     onValueSet: (value: number) => void;
 }
 
-export function Drawer({ name, initialValue, onValueSet }: DrawerProps) {
+export function RadialNumberSelect({ name, initialValue, onValueSet }: DrawerProps) {
     let [isOpen, setIsOpen] = useState(false);
     let [total, setTotal] = useState(initialValue);
     let [isSecond, setIsSecond] = useState(false);
@@ -34,7 +34,7 @@ export function Drawer({ name, initialValue, onValueSet }: DrawerProps) {
 
     let firstElementRef = useRef<HTMLDivElement>(null);
     let activateNumItem = useCallback((target: HTMLDivElement) => {
-        let n = parseInt(target.getAttribute("data-num"));
+        let n = parseInt(target.getAttribute('data-num'));
         if (!isSecond) {
             setTotal(n);
             setIsSecond(true);
@@ -58,6 +58,7 @@ export function Drawer({ name, initialValue, onValueSet }: DrawerProps) {
         firstElementRef.current = elem;
     }, [activateNumItem]);
     let onMouseUp = useMemo<MouseEventHandler<HTMLDivElement>>(() => (ev) => {
+        ev.preventDefault();
         let elem = ev.currentTarget.closest('.Drawer-numItem') as HTMLDivElement | null;
         if (elem === firstElementRef.current) {
             firstElementRef.current = null;
@@ -67,6 +68,7 @@ export function Drawer({ name, initialValue, onValueSet }: DrawerProps) {
         activateNumItem(elem);
     }, [activateNumItem]);
     let onTouchEnd = useMemo<TouchEventHandler<HTMLDivElement>>(() => (ev) => {
+        ev.preventDefault();
         const touch = ev.changedTouches[0];
         if (!touch) return;
 
@@ -140,7 +142,7 @@ export function Drawer({ name, initialValue, onValueSet }: DrawerProps) {
         onValueSet(initialValue)
     }, [initialValue, onValueSet]);
 
-    return <div className={"Drawer-container"}>
+    return <div className={ 'Drawer-container' }>
         {
             items.map((item, idx) => {
                 if (item.isEmpty) {
@@ -166,20 +168,21 @@ export function Drawer({ name, initialValue, onValueSet }: DrawerProps) {
                 }
                 return <div className={ 'Drawer-itemParent' } key={ item.id } style={ parentStyle }>
                     <div className={ 'Drawer-item' } data-id={ item.id }>
-                        <div style={ itemStyle } >
+                        <div style={ itemStyle }>
                             { item.render({ isOpen }) }
                         </div>
                     </div>
                 </div>
             }).filter(e => !!e)
         }
-        <div className={'Drawer-centeredContainer' + (isOpen ? " isOpen" : "")} onClick={onCancel}>
+        <div className={ 'Drawer-centeredContainer' + (isOpen ? ' isOpen' : '') } onClick={ onCancel }>
             <span>{ name }</span>
-            { total == null ? "??" : total }
+            { total == null ? '??' : total }
         </div>
     </div>
 }
 
 export const DrawerContext = createContext({
-    isDrawerOpened: false, setIsDrawerOpened: (v: boolean) => {}
+    isDrawerOpened: false, setIsDrawerOpened: (v: boolean) => {
+    }
 });
