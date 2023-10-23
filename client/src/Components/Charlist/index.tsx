@@ -4,12 +4,12 @@ import { useAppDispatch, useAppSelector } from '../../store';
 import {
     initiativeSliceActions as sliceActions,
     isInitiativeReadySelector,
-    updateActor,
     useSelectedInitiativeState,
     sortedCharactersSelector,
     setInitiativeAction,
     isAllPlayersInitiativeReadySelector,
-    Character
+    Character,
+    changeActorName
 } from '../../store/initiativeSlice';
 import { CharItem } from '../CharItem';
 
@@ -36,7 +36,7 @@ export function Charlist() {
         dispatch(setInitiativeAction({ id, initiative: value, ownerId: playerId, isSecondary }));
         dispatch(sliceActions.setDisabled({ id, isDisabled: false }));
     }, [dispatch, playerId]);
-    const changeName = useCallback((id: number, name: string) => dispatch(updateActor({ id, name })), []);
+    const changeName = useCallback((id: number, name: string) => dispatch(changeActorName({ id, name })), []);
 
     const [editingId, setEditingId] = useState<number | null>(null);
 
