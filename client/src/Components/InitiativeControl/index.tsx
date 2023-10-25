@@ -24,7 +24,10 @@ export function InitiativeControl({
                                       isSecondary
                                   }: InitiativeControlProps) {
     const [isSetting, setIsSetting] = useState(false);
-    const setIsSettingTrue = useCallback(() => setIsSetting(true), []);
+    const setIsSettingTrue = useCallback(() => {
+        navigator.vibrate([10, 30, 20, 10]);
+        setIsSetting(true);
+    }, []);
     const onInitiativeSet = useCallback((value: number) => {
         setInitiative(id, value, isSecondary);
         setIsSetting(false);
@@ -32,7 +35,7 @@ export function InitiativeControl({
     const initiativeToChange = isSecondary ? secondaryInitiative : initiative;
 
     return <div className={ 'InitiativeControl-wrapper'  }>
-        <div className={ 'InitiativeControl-circle' } onClickCapture={ setIsSettingTrue }/>
+        <div className={ 'InitiativeControl-circle' } onClick={ setIsSettingTrue }/>
         <div
             className={ 'InitiativeControl-number' }>{ getInitiativeDisplay(initiativeToChange, hideInitiative) }</div>
         { isSetting ? createPortal(<div className={ 'overlay' }/>, document.querySelector('.App-header')) : null }

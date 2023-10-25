@@ -73,7 +73,7 @@ function ElementIcon({ index, state, inHistory }: { index: number, state: Elemen
             navigator.vibrate([10, 30, 20, 10]);
             dispatch(initiativeSliceActions.setElementState({ element: index, state: ElementState.Strong }));
         } else {
-            navigator.vibrate([10, 10]);
+            navigator.vibrate([10, 40, 30, 10]);
             dispatch(initiativeSliceActions.setElementState({ element: index, state: ElementState.Inert }));
         }
     }, [index, state, inHistory]);
@@ -81,7 +81,7 @@ function ElementIcon({ index, state, inHistory }: { index: number, state: Elemen
         e.preventDefault();
         if (inHistory) return;
 
-        navigator.vibrate([10, 10]);
+        navigator.vibrate([10, 40, 30, 10]);
         dispatch(initiativeSliceActions.setElementState({ element: index, state: ElementState.Waning }));
     }, [index, state, inHistory]);
 

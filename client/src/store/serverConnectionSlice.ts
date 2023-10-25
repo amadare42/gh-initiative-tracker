@@ -1,17 +1,18 @@
 import { createAppAsyncThunk } from './createAppAsyncThunk';
 import { initiativeSliceActions, InitiativeState } from './initiativeSlice';
-import { createAction, createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { CallbackEvent } from '../utils/callbackEvent';
 
 import * as jsonPatch from 'fast-json-patch';
 
-
 const MESSAGE_COUNT = 10;
-// const SERVER_URL = 'ws://localhost:3001/ws';
-const SERVER_URL = 'wss://api.turns.amadare.top';
+const CONNECTION_ID_KEY = 'store.serverConnection.connectionId';
+const SERVER_URL = process.env.NODE_ENV === 'production'
+    ? 'wss://api.turns.amadare.top'
+    : 'ws://localhost:3001/ws';
 
 function getConnectionId() {
-    let value = localStorage.getItem('store.serverConnection.connectionId');
+    let value = localStorage.getItem(CONNECTION_ID_KEY);
     if (!value || value == 'null') {
         return initConnectionId();
     }
@@ -20,7 +21,7 @@ function getConnectionId() {
 
 function initConnectionId() {
     const connectionId = generateConnectionId();
-    localStorage.setItem('store.serverConnection.connectionId', connectionId);
+    localStorage.setItem(CONNECTION_ID_KEY, connectionId);
     return connectionId;
 }
 

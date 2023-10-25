@@ -1,5 +1,5 @@
-import { createAction, createAsyncThunk, createSelector, createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { createAppSelector, RootState, store, useAppSelector } from './index';
+import { createAction, createSelector, createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { useAppSelector } from './index';
 import { createAppAsyncThunk } from './createAppAsyncThunk';
 
 export interface HistoryEntry {
@@ -61,7 +61,7 @@ const initialState: InitiativeState = {
     nextCharacterId: initCharacters.length,
     round: 1,
     history: [],
-    elementStates: Array.from({ length: ElementsCount }, () => ElementState.Waning)
+    elementStates: Array.from({ length: ElementsCount }, () => ElementState.Inert)
 }
 export const toggleDisabledAction = createAction<number>('toggleDisabled');
 export const deleteCharacterAction = createAction<number>('deleteCharacter');

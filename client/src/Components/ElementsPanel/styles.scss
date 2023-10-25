@@ -92,8 +92,8 @@
     }
 
     &.dark:not(.inert) .outline {
-      transition: none;
-      filter: invert(100%) saturate(0) blur(0.5vmin) !important;
+      filter: invert(100%) saturate(0) blur(0.1em) !important;
+      transform: scale(1.05);
     }
 
     &.dark.waning > .outline {

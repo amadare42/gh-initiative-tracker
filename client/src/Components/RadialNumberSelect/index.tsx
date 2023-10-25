@@ -5,7 +5,8 @@ import {
     useCallback,
     useContext,
     useEffect,
-    useMemo, useRef,
+    useMemo,
+    useRef,
     useState
 } from 'react';
 import './styles.scss';
@@ -68,7 +69,6 @@ export function RadialNumberSelect({ name, initialValue, onValueSet }: DrawerPro
         activateNumItem(elem);
     }, [activateNumItem]);
     let onTouchEnd = useMemo<TouchEventHandler<HTMLDivElement>>(() => (ev) => {
-        ev.preventDefault();
         const touch = ev.changedTouches[0];
         if (!touch) return;
 
@@ -80,6 +80,8 @@ export function RadialNumberSelect({ name, initialValue, onValueSet }: DrawerPro
         }
         activateNumItem(elem);
         firstElementRef.current = null;
+        ev.stopPropagation();
+        ev.preventDefault();
     }, [activateNumItem]);
     let onMouseLeave = useMemo<MouseEventHandler<HTMLDivElement>>(() => (ev) => {
         firstElementRef.current = null;

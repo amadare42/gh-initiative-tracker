@@ -1,22 +1,16 @@
 import './styles.scss';
 import { store, useAppDispatch, useAppSelector } from '../../store';
-import {
-    FaCheckCircle,
-    FaHourglass,
-    FaRegCircle,
-    FaSync,
-    FaUnlink,
-    FaWindowClose
-} from 'react-icons/fa';
+import { FaCheckCircle, FaHourglass, FaRegCircle, FaSync, FaUnlink, FaWindowClose } from 'react-icons/fa';
 import {
     ConnectionStatus,
     createRoomAction,
-    ensureConnectionAction, joinRoomAction,
-    disconnectAction
+    disconnectAction,
+    ensureConnectionAction,
+    joinRoomAction
 } from '../../store/serverConnectionSlice';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { CopyToClipboard } from '../CopyToClipboard';
-import { RefreshConnectionButton } from './RefreshConnectionButton';
+import { ClientHash } from './ClientHash';
 
 export function ConnectionControl() {
     const status = useAppSelector(state => state.connection.status);
@@ -50,7 +44,6 @@ export function ConnectionControl() {
     const [editRoomId, setEditRoomId] = useState('');
     const closeDrawer = useCallback(() => setIsDrawerOpened(false), []);
     const connectionId = useAppSelector(state => state.connection.connectionId);
-    const connectionIdHash = useMemo(() => parseConnectionIdMetadata(connectionId), [connectionId]);
     const roomHref = useMemo(() => window.location.href.split('?')[0] + `?r=${ roomId }`, [roomId]);
 
     return <div className={ 'ConnectionControl-wrapper' }
@@ -66,12 +59,7 @@ export function ConnectionControl() {
                             <p>Player count: { playerCount }</p>
                         </> : null
                     }
-                    {
-                        connectionIdHash ?
-                            <p className={ 'ConnectionControl-clientId' }>Client
-                                ID: { connectionIdHash }<RefreshConnectionButton connectionId={ connectionId }/></p>
-                            : null
-                    }
+                    <ClientHash connectionId={ connectionId }/>
                     <div className={ 'ConnectionControl-buttonsHorContainer' }>
                         <button onClick={ createRoom }>New Room</button>
                         <button onClick={ disconnectCb } disabled={ !isConnected }>Disconnect</button>
@@ -91,33 +79,6 @@ export function ConnectionControl() {
         }
     </div>
 }
-
-function parseConnectionIdMetadata(connectionId: string) {
-    if (!connectionId) return '';
-    const [creationTime, id] = connectionId.split('_').slice(-2);
-    const diff = new Date().getTime() - parseInt(creationTime);
-    return `${ id.slice(-4) } ${ formatTimespan(diff) }`;
-}
-
-function formatTimespan(ms: number) {
-    const seconds = Math.floor(ms / 1000);
-    const minutes = Math.floor(seconds / 60);
-    const hours = Math.floor(minutes / 60);
-    const days = Math.floor(hours / 24);
-
-    const minutesStr = minutes % 60;
-    const hoursStr = hours % 60;
-
-    if (seconds < 60) return `just now`;
-    if (days > 0) return `${ days }days`;
-
-    let result = '~';
-    if (hoursStr) result += `${ hoursStr }hrs `;
-    if (minutesStr) result += `${ minutesStr }min`;
-
-    return result;
-}
-
 
 function isValidRoomId(roomId: string) {
     let t = roomId.trim();

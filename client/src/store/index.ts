@@ -1,16 +1,8 @@
-import {
-    AnyAction,
-    configureStore,
-    createListenerMiddleware,
-    createSelector,
-    Dispatch,
-    isAnyOf
-} from '@reduxjs/toolkit';
-import initiativeReducer, { updateActor } from './initiativeSlice';
+import { configureStore, createSelector } from '@reduxjs/toolkit';
+import initiativeReducer from './initiativeSlice';
 import uiStateReducer from './uiStateSlice';
 import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
-import { pushRoomStateAction, serverConnectionSliceReducer } from './serverConnectionSlice';
-import { ExcludeFromTuple } from '@reduxjs/toolkit/dist/tsHelpers';
+import { serverConnectionSliceReducer } from './serverConnectionSlice';
 import { listenerMiddlewareInstance } from './middleware';
 
 export const store = configureStore({

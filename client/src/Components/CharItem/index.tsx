@@ -1,8 +1,4 @@
-import {
-    Character, initiativeSliceActions,
-    removeActor,
-    toggleDisabledAction
-} from '../../store/initiativeSlice';
+import { initiativeSliceActions, removeActor } from '../../store/initiativeSlice';
 import React, {
     DOMAttributes,
     ForwardedRef,
@@ -10,7 +6,6 @@ import React, {
     useCallback,
     useEffect,
     useImperativeHandle,
-    useMemo,
     useRef
 } from 'react';
 import useLongPress from '../../utils/useLongPress';
@@ -100,7 +95,7 @@ interface ClickHandlerProps {
 
 function MobileClickHandler({ children, primaryAction, secondaryAction }: ClickHandlerProps) {
     const handlers = useLongPress(secondaryAction, primaryAction, {
-        shouldPreventDefault: true,
+        shouldPreventDefault: false,
         delay: 500,
     });
     return children(handlers);
