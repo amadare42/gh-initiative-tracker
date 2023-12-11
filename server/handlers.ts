@@ -1,6 +1,8 @@
 import { ConnectionEntry, Message, RoomEntry, RoomStatePayload } from './model';
 import { generateRoomId } from './util';
 import { connectionsTable, roomsTable } from './db';
+import { PatchOp, performPatch } from '../client/src/shared';
+import hashSum from 'hash-sum';
 
 export interface HandlerContext {
     sendMsg: SendMessageFn;
@@ -161,6 +163,54 @@ export const handlers = createHandlers({
                 playersConnected: connectionIds.length + 1
             }
         }, connectionIds);
+    },
+
+    'room.applyPatches': async ({ connectionId, sendMsg, tailend }, payload: { hash: string, patches: PatchOp[] }) => {
+        if (!payload.patches || !payload.patches.length) {
+            return;
+        }
+        const connection = await connectionsTable.get(connectionId);
+        let roomEntry: RoomEntry = await roomsTable.get(connection.roomId);
+        if (!connection || !connection.roomId || !roomEntry) {
+            console.log(`Room ${ connection.roomId } not found`);
+            await sendMsg(connectionId, {
+                type: 'room.notFound',
+                data: { roomId: connection.roomId }
+            });
+            return;
+        }
+
+        const newState = performPatch(roomEntry.state, ...payload.patches);
+        await roomsTable.addOrUpdate({
+            id: connection.roomId,
+            state: newState
+        });
+
+        // broadcast patches
+        let connectionIds = await connectionsTable.getConnectionIdsForRoom(connection.roomId);
+        connectionIds = connectionIds.filter(conId => conId !== connectionId);
+        await broadcastMsg(sendMsg, {
+            type: 'room.applyPatches',
+            data: {
+                patches: payload.patches,
+                playersConnected: connectionIds.length + 1
+            }
+        }, connectionIds);
+
+        // send full state if hashes don't match
+        const newHash = hashSum(newState);
+        if (newHash !== payload.hash) {
+            console.log(`Hashes don't match: ${ newHash } !== ${ payload.hash }`);
+            await sendMsg(connectionId, {
+                type: 'room.update',
+                data: {
+                    state: newState,
+                    playersConnected: connectionIds.length + 1
+                }
+            });
+        }
+
+        tailend(roomsTable.moveExpiration(connection.roomId));
     },
 
     'room.requestUpdate': async ({ connectionId, sendMsg }, payload: { roomId: string }) => {

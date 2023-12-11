@@ -2,8 +2,7 @@ import { createAppAsyncThunk } from './createAppAsyncThunk';
 import { initiativeSliceActions, InitiativeState } from './initiativeSlice';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { CallbackEvent } from '../utils/callbackEvent';
-
-import * as jsonPatch from 'fast-json-patch';
+import { PatchOp } from '../shared';
 
 const MESSAGE_COUNT = 10;
 const CONNECTION_ID_KEY = 'store.serverConnection.connectionId';
@@ -49,10 +48,11 @@ export type WsMessage =
     WsMessageBase<'room.create', CreateRoomPayload>
     | WsMessageBase<'room.join', { roomId: string }>
     | WsMessageBase<'room.leave'>
-    | WsMessageBase<'room.update', { state: InitiativeState }>
+    | WsMessageBase<'room.update', { state: Omit<InitiativeState, 'patchesQueue'> }>
+    | WsMessageBase<'room.applyPatches', { patches: PatchOp[], hash: string }>
     | WsMessageBase<'connection.setId', { id: string }>
     | WsMessageBase<'room.requestUpdate', { roomId: string }>
-    | WsMessageBase<'room.patch', { roomId: string, hash: string, patch: jsonPatch.Operation[] }>;
+    | WsMessageBase<'room.patch', { roomId: string, hash: string, patch: PatchOp[] }>;
 export type PayloadFor<Type extends WsMessage['type']> = Extract<WsMessage, { type: Type }>['payload'];
 
 
@@ -60,7 +60,7 @@ export type ConnectionStatus = 'Connected' | 'No Room' | 'Connecting' | 'Disconn
 
 
 export type CreateRoomPayload = {
-    state: InitiativeState
+    state: Omit<InitiativeState, 'patchesQueue'>;
 }
 
 let ws: WebSocket | null = null;
@@ -208,6 +208,13 @@ export const onMessageAction = createAppAsyncThunk('onMessage', async ({ message
                 break;
             }
 
+            case 'room.applyPatches': {
+                const { patches } = message.data;
+                dispatch(initiativeSliceActions.applyPatches(patches));
+                // dispatch(serverConnectionSliceActions.setPlayerCount(playersConnected));
+                break;
+            }
+
             case 'room.requestUpdate': {
                 const { roomId } = message.data;
                 const roomState = getState().initiative;
@@ -247,6 +254,10 @@ export const joinRoomAction = createAppAsyncThunk(
 export const pushRoomStateAction = createAppAsyncThunk(
     'pushRoomState',
     async (payload: PayloadFor<'room.update'>) => sendMsg('room.update', payload));
+
+export const pushRoomPatches = createAppAsyncThunk(
+    'pushRoomPatches',
+    async (payload: PayloadFor<'room.applyPatches'>) => sendMsg('room.applyPatches', payload));
 
 export const refreshClientIdAction = createAppAsyncThunk(
     'refreshClientId',

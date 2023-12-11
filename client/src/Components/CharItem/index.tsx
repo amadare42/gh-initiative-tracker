@@ -67,8 +67,11 @@ export const CharItem = forwardRef((props: CharItemProps, ref: ForwardedRef<HTML
                 handlers => <div className={ 'CharItem-body' } { ...handlers }>
                     {
                         props.editingId === props.id
-                            ? <input value={ name } onChange={ v => changeName(id, v.currentTarget.value) }
-                                     onBlur={ () => props.setEditingId(null) } autoFocus={ true }/>
+                            ? <input defaultValue={ name }
+                                     onBlur={ ev => {
+                                         props.setEditingId(null);
+                                         changeName(id, ev.currentTarget.value)
+                                     } } autoFocus={ true }/>
                             : <span className={ 'CharItem-name' }>{ props.name }</span>
                     }
                 </div>

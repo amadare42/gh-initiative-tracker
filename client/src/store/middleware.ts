@@ -1,15 +1,31 @@
 import { createListenerMiddleware } from '@reduxjs/toolkit';
-import { pushRoomStateAction } from './serverConnectionSlice';
+import { pushRoomPatches, pushRoomStateAction } from './serverConnectionSlice';
 import { store } from './index';
+import { clearPatchQueue } from './initiativeSlice';
+import hashSum from 'hash-sum';
+import { omitKeys } from '../utils/pick';
 
 const pushState = () => store.dispatch(pushRoomStateAction({
-    state: store.getState().initiative
+    state: omitKeys(store.getState().initiative, ['patchesQueue'])
 }));
+const pushPatches = () => {
+    const state = store.getState();
+    const patches = state.initiative.patchesQueue;
+    if (!patches.length) {
+        return;
+    }
+    const hasheableState = omitKeys(state.initiative, ['patchesQueue']);
+    store.dispatch(pushRoomPatches({
+        patches: patches,
+        hash: hashSum(hasheableState)
+    }));
+    store.dispatch(clearPatchQueue())
+};
 const throttledPushState = () => {
     if (pushStateTimeout) {
         clearTimeout(pushStateTimeout);
     }
-    pushStateTimeout = setTimeout(pushState, 0);
+    pushStateTimeout = setTimeout(pushPatches, 0);
 }
 let pushStateTimeout: ReturnType<typeof setTimeout> | undefined;
 

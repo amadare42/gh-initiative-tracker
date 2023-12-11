@@ -1,7 +1,7 @@
 import { createAction, createSelector, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { useAppSelector } from './index';
 import { createAppAsyncThunk } from './createAppAsyncThunk';
-import * as JsonPatch from 'fast-json-patch';
+import { PatchOp, performPatch } from '../shared';
 
 export interface HistoryEntry {
     round: number;
@@ -42,7 +42,7 @@ export interface InitiativeState {
     activeCharacterId: number;
     round: number;
     elementStates: ElementState[];
-    patchesQueue: JsonPatch.Operation[];
+    patchesQueue: PatchOp[];
 }
 
 const initCharacters: Character[] = [
@@ -70,7 +70,10 @@ const initialState: InitiativeState = {
 export const toggleDisabledAction = createAction<number>('toggleDisabled');
 export const deleteCharacterAction = createAction<number>('deleteCharacter');
 export const setInitiativeAction = createAppAsyncThunk('setInitiativeAction',
-    async (payload: { id: number, initiative: number, ownerId: string, isSecondary: boolean }, { dispatch, getState }) => {
+    async (payload: { id: number, initiative: number, ownerId: string, isSecondary: boolean }, {
+        dispatch,
+        getState
+    }) => {
         dispatch(initiativeSliceActions.setInitiative(payload));
         const state = getState();
         if (!isInitiativeReadySelector(state.initiative)) {
@@ -105,17 +108,20 @@ export const initiativeSlice = createSlice({
                 isDisabled: false,
                 ...action.payload,
             };
-            // TODO: apply patch instead of making change and applying patch separately
-            state.characters.push(newCharacter);
-            state.nextCharacterId++;
+            // state.characters.push(newCharacter);
+            // state.nextCharacterId++;
             updateQueue(state, {
+                op: 'test',
+                path: '$.nextCharacterId',
+                value: state.nextCharacterId
+            }, {
                 op: 'add',
-                path: `/characters/-`,
+                path: `$.characters[-]`,
                 value: newCharacter
             }, {
                 op: 'replace',
-                path: `/nextCharacterId`,
-                value: state.nextCharacterId
+                path: `$.nextCharacterId`,
+                value: state.nextCharacterId + 1
             });
         },
 
@@ -134,7 +140,12 @@ export const initiativeSlice = createSlice({
             if (currentCharacterIdx < 0) {
                 currentCharacterIdx = sorted.findIndex(c => !c.isDisabled);
                 if (currentCharacterIdx >= 0) {
-                    state.activeCharacterId = sorted[currentCharacterIdx].id;
+                    // state.activeCharacterId = sorted[currentCharacterIdx].id;
+                    updateQueue(state, {
+                        op: 'replace',
+                        path: `$.activeCharacterId`,
+                        value: sorted[currentCharacterIdx].id
+                    });
                     return;
                 }
             }
@@ -144,113 +155,129 @@ export const initiativeSlice = createSlice({
                 return;
             }
 
-            state.activeCharacterId = sorted[nextCharacterIdx].id;
+            // state.activeCharacterId = sorted[nextCharacterIdx].id;
             updateQueue(state, {
                 op: 'replace',
-                path: `/nextCharacterId`,
-                value: state.nextCharacterId
+                path: `$.activeCharacterId`,
+                value: sorted[nextCharacterIdx].id
             });
         },
 
-        removeActor: (state, action: PayloadAction<number>) => {
-            state.characters = state.characters.filter(actor => actor.id !== action.payload);
+        removeActor: (state, { payload: id }: PayloadAction<number>) => {
+            // state.characters = state.characters.filter(actor => actor.id !== action.payload);
             updateQueue(state, {
                 op: 'remove',
-                path: `$.characters[?(@.id==${action.payload})]`
+                path: `$.characters[?(@.id==${ id })]`
             })
         },
 
         changeActorName: (state, action: PayloadAction<{ id: number, name: string }>) => {
-            const actorIndex = state.characters.findIndex(actor => actor.id === action.payload.id);
-            state.characters[actorIndex].name = action.payload.name;
+            // const actorIndex = state.characters.findIndex(actor => actor.id === action.payload.id);
+            // state.characters[actorIndex].name = action.payload.name;
+
             updateQueue(state, {
                 op: 'replace',
-                path: `$.characters[?(@.id==${action.payload.id})].name`,
+                path: `$.characters[?(@.id==${ action.payload.id })].name`,
                 value: action.payload.name
             });
         },
 
         toggleDisabled: (state, action: PayloadAction<number>) => {
             const actorIndex = state.characters.findIndex(actor => actor.id === action.payload);
-            state.characters[actorIndex].isDisabled = !state.characters[actorIndex].isDisabled;
+            // state.characters[actorIndex].isDisabled = !state.characters[actorIndex].isDisabled;
             updateQueue(state, {
                 op: 'replace',
-                path: `$.characters[?(@.id==${action.payload})].isDisabled`,
-                value: state.characters[actorIndex].isDisabled
+                path: `$.characters[?(@.id==${ action.payload })].isDisabled`,
+                value: !state.characters[actorIndex].isDisabled
             });
         },
 
         setDisabled: (state, action: PayloadAction<{ id: number, isDisabled: boolean }>) => {
-            const actorIndex = state.characters.findIndex(actor => actor.id === action.payload.id);
-            state.characters[actorIndex].isDisabled = action.payload.isDisabled;
+            // const actorIndex = state.characters.findIndex(actor => actor.id === action.payload.id);
+            // state.characters[actorIndex].isDisabled = action.payload.isDisabled;
             updateQueue(state, {
                 op: 'replace',
-                path: `$.characters[?(@.id==${action.payload})].isDisabled`,
+                path: `$.characters[?(@.id==${ action.payload.id })].isDisabled`,
                 value: action.payload.isDisabled
             });
         },
 
-        setInitiative: (state, action: PayloadAction<{ id: number, initiative: number, ownerId: string, isSecondary: boolean }>) => {
+        setInitiative: (state, action: PayloadAction<{
+            id: number,
+            initiative: number,
+            ownerId: string,
+            isSecondary: boolean
+        }>) => {
             const character = state.characters.find(actor => actor.id === action.payload.id);
             if (!character)
                 return;
-            const basePath = `$.characters[?(@.id==${action.payload.id})]`;
-            const patches: JsonPatch.Operation[] = [];
+            const basePath = `$.characters[?(@.id==${ action.payload.id })]`;
+            const patches: PatchOp[] = [];
 
             if (action.payload.isSecondary) {
-                character.secondaryInitiative = action.payload.initiative;
+                // character.secondaryInitiative = action.payload.initiative;
                 patches.push({
                     op: 'replace',
-                    path: `${basePath}.secondaryInitiative`,
+                    path: `${ basePath }.secondaryInitiative`,
                     value: action.payload.initiative
                 });
             } else {
-                character.initiative = action.payload.initiative;
+                // character.initiative = action.payload.initiative;
                 patches.push({
                     op: 'replace',
-                    path: `${basePath}.initiative`,
+                    path: `${ basePath }.initiative`,
                     value: action.payload.initiative
                 });
             }
-            character.ownerId = action.payload.ownerId;
+            // character.ownerId = action.payload.ownerId;
             patches.push({
                 op: 'replace',
-                path: `${basePath}.ownerId`,
+                path: `${ basePath }.ownerId`,
                 value: action.payload.ownerId
             });
             updateQueue(state, ...patches);
         },
         setElementState: (state, action: { payload: { element: number, state: ElementState } }) => {
-            state.elementStates[action.payload.element] = action.payload.state;
+            // state.elementStates[action.payload.element] = action.payload.state;
+
             updateQueue(state, {
                 op: 'replace',
-                path: `$.elementStates[${action.payload.element}]`,
+                path: `$.elementStates[${ action.payload.element }]`,
                 value: action.payload.state
             });
         },
         nextRound: (state) => {
-            state.history = updateQueuePrefixed(state, '/history', state.history, getUpdatedHistory(state));
+            const historyEntry = getNewHistoryEntry(state);
+            updateQueue(state, {
+                op: 'test',
+                path: '$.history.length',
+                value: state.history.length
+            }, {
+                op: 'add',
+                path: '$.history[-]',
+                value: historyEntry
+            })
 
-            state.round++;
+            // state.round++;
             updateQueue(state, {
                 op: 'replace',
-                path: `/round`,
-                value: state.round
+                path: `$.round`,
+                value: state.round + 1
             });
 
-            state.activeCharacterId = -1;
+            // state.activeCharacterId = -1;
             updateQueue(state, {
                 op: 'replace',
-                path: `/activeCharacterId`,
-                value: state.activeCharacterId
+                path: `$.activeCharacterId`,
+                value: -1
             });
 
             state.characters = state.characters.map(actor => {
                 updateQueue(state, ...['ownerId', 'initiative', 'secondaryInitiative'].map(prop => ({
                     op: 'replace',
-                    path: `/characters/*/${prop}`,
+                    path: `$.characters[*].${ prop }`,
                     value: null
-                } as JsonPatch.Operation)));
+                } as PatchOp)));
 
                 return {
                     ...actor,
@@ -260,11 +287,11 @@ export const initiativeSlice = createSlice({
                 }
             });
 
-            state.elementStates = state.elementStates.map(e => Math.max(e - 1, ElementState.Inert));
+            // state.elementStates = state.elementStates.map(e => Math.max(e - 1, ElementState.Inert));
             updateQueue(state, {
                 op: 'replace',
-                path: `/elementStates`,
-                value: state.elementStates
+                path: `$.elementStates`,
+                value: state.elementStates.map(e => Math.max(e - 1, ElementState.Inert))
             });
         },
 
@@ -272,11 +299,11 @@ export const initiativeSlice = createSlice({
             if (action.payload < 1) {
                 return;
             }
-            state.round = action.payload;
+            // state.round = action.payload;
             updateQueue(state, {
                 op: 'replace',
-                path: `/round`,
-                value: state.round
+                path: `$.round`,
+                value: action.payload
             });
         },
 
@@ -284,11 +311,11 @@ export const initiativeSlice = createSlice({
             if (!isInitiativeReadySelector(state)) {
                 return;
             }
-            state.activeCharacterId = action.payload;
+            // state.activeCharacterId = action.payload;
             updateQueue(state, {
                 op: 'replace',
-                path: `/activeCharacterId`,
-                value: state.activeCharacterId
+                path: `$.activeCharacterId`,
+                value: action.payload
             });
         },
 
@@ -298,26 +325,20 @@ export const initiativeSlice = createSlice({
             state.nextCharacterId = action.payload.nextCharacterId;
             state.round = action.payload.round;
             state.elementStates = action.payload.elementStates;
+            state.history = action.payload.history;
         },
 
-        applyPatches: (state, action: PayloadAction<JsonPatch.Operation[]>) => {
-            JsonPatch.applyPatch(state, action.payload);
-            if (action.payload.some(p => p.path === '/characters')) {
-                state.characters = [...state.characters];
-            }
-            if (action.payload.some(p => p.path === '/elementStates')) {
-                state.elementStates = [...state.elementStates];
-            }
-            if (action.payload.some(p => p.path === '/history')) {
-                state.history = [...state.history];
-            }
+        applyPatches: (state, action: PayloadAction<PatchOp[]>) => {
+            performPatch(state, ...action.payload);
+        },
+        clearPatchQueue: (state) => {
+            state.patchesQueue = [];
         }
     }
 });
 
-function getUpdatedHistory(state: InitiativeState) {
-    const history = [...state.history];
-    const historyEntry: HistoryEntry = {
+function getNewHistoryEntry(state: InitiativeState) {
+    return {
         round: state.round,
         characters: state.characters.map(actor => ({
             name: actor.name,
@@ -327,31 +348,14 @@ function getUpdatedHistory(state: InitiativeState) {
         })),
         elementStates: state.elementStates.map(e => e)
     }
-
-    const existingEntryIdx = history.findIndex(entry => entry.round === historyEntry.round);
-    if (existingEntryIdx >= 0) {
-        history[existingEntryIdx] = historyEntry;
-    } else {
-        history.push(historyEntry);
-    }
-
-    return history;
 }
 
-function updateQueuePrefixed<T>(state: InitiativeState, prefix: string, value: T, newValue: T) {
-    const patches = JsonPatch.compare(value, newValue);
-    // updateQueue(state, ...patches.map(p => ({
-    //     ...p,
-    //     path: prefix + p.path
-    // })));
-    return newValue;
-}
-
-function updateQueue(state: InitiativeState, ...patches: JsonPatch.Operation[]) {
-    // state.patchesQueue = [
-    //     ...state.patchesQueue,
-    //     ...patches
-    // ];
+function updateQueue(state: InitiativeState, ...patches: any[]) {
+    performPatch(state, ...patches);
+    state.patchesQueue = [
+        ...state.patchesQueue,
+        ...patches
+    ];
 }
 
 function initiativeSortPredicate(a: Character, b: Character) {
@@ -417,7 +421,8 @@ export const {
     nextRound,
     nextCharacter,
     toggleDisabled,
-    applyState
+    applyState,
+    clearPatchQueue,
 } = initiativeSlice.actions;
 
 

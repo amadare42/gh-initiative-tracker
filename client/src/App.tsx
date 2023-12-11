@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import logo from './logo.svg';
 import './App.scss';
 import { Charlist } from './Components/Charlist';
 import { DrawerContext } from './Components/RadialNumberSelect';
@@ -12,6 +11,7 @@ import { store } from './store';
 import { ConnectionControl } from './Components/ConnectionControl';
 import { useDeeplink } from './hooks/deeplink';
 import { ElementsPanel } from './Components/ElementsPanel';
+import { omitKeys } from './utils/pick';
 
 function App() {
 
@@ -45,7 +45,7 @@ function Debug() {
             dispatch(joinRoomAction({ roomId }) as any);
         };
         window['wCreate'] = () => {
-            dispatch(createRoomAction({ state: store.getState().initiative }) as any);
+            dispatch(createRoomAction({ state: omitKeys(store.getState().initiative, ['patchesQueue']) }) as any);
         };
     }, []);
     return null;

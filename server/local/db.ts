@@ -1,4 +1,4 @@
-import * as sqlite3 from 'better-sqlite3';
+import sqlite3 from 'better-sqlite3';
 import { ConnectionEntry, ConnectionsTable, RoomEntry, RoomsTable } from '../model';
 
 const db = sqlite3('local.db');

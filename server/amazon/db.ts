@@ -115,7 +115,7 @@ export const connectionsTable = {
     }
 }
 
-const ROOM_TTL = process.env.ROOM_TTL ? parseInt(process.env.ROOM_TTL) : 60 * 60 * 2;
+const ROOM_TTL = process.env.ROOM_TTL ? parseInt(process.env.ROOM_TTL) : 60 * 60 * 24; // 24 hours by default
 const ROOM_TABLE = process.env.ROOMS_TABLE || 'gh-turns_rooms';
 export const roomsTable = {
     getAllIds: async () => {

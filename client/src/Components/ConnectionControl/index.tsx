@@ -11,6 +11,7 @@ import {
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { CopyToClipboard } from '../CopyToClipboard';
 import { ClientHash } from './ClientHash';
+import { omitKeys } from '../../utils/pick';
 
 export function ConnectionControl() {
     const status = useAppSelector(state => state.connection.status);
@@ -26,7 +27,7 @@ export function ConnectionControl() {
 
     const createRoom = useCallback(async () => {
         await dispatch(ensureConnectionAction()).unwrap();
-        dispatch(createRoomAction({ state: store.getState().initiative }) as any);
+        dispatch(createRoomAction({ state: omitKeys(store.getState().initiative, ['patchesQueue']) }) as any);
     }, [dispatch])
     const disconnectCb = useCallback(async () => {
         dispatch(disconnectAction());
