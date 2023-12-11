@@ -5,7 +5,7 @@ import { marshall } from '@aws-sdk/util-dynamodb';
 const ddb = new DynamoDB();
 
 const CONNECTIONS_TABLE = process.env.CONNECTIONS_TABLE || 'gh-turns_connections';
-const CONNECTIONS_TTL = process.env.CONNECTIONS_TTL ? parseInt(process.env.CONNECTIONS_TTL) : 1000 * 60 * 5;
+const CONNECTIONS_TTL = process.env.CONNECTIONS_TTL ? parseInt(process.env.CONNECTIONS_TTL) : 60 * 5;
 const NULL_PLACEHOLDER = "[[NULL]]";
 function nullStr(str: string | null) {
     if (!str) {
@@ -20,6 +20,9 @@ function fromNullStr(str: string) {
     }
     return str;
 }
+
+export const getExpiration = (ttl: number) => Math.floor((Date.now() / 1000)) + ttl;
+
 export const connectionsTable = {
     put: async (connection: ConnectionEntry) => {
         await ddb.putItem({
@@ -28,7 +31,7 @@ export const connectionsTable = {
                 connectionId: connection.connectionId,
                 clientId: nullStr(connection.clientId),
                 roomId: nullStr(connection.roomId),
-                expire: Date.now() + CONNECTIONS_TTL
+                expire: getExpiration(CONNECTIONS_TTL)
             })
         });
     },
@@ -63,7 +66,7 @@ export const connectionsTable = {
             UpdateExpression: 'set clientId = :clientId, expire = :expire',
             ExpressionAttributeValues: marshall({
                 ':clientId': nullStr(clientId),
-                ':expire': Date.now() + CONNECTIONS_TTL
+                ':expire': getExpiration(CONNECTIONS_TTL)
             })
         });
     },
@@ -92,12 +95,12 @@ export const connectionsTable = {
             UpdateExpression: 'set roomId = :roomId, expire = :expire',
             ExpressionAttributeValues: {
                 ':roomId': { S: nullStr(roomId) },
-                ':expire': { N: (Date.now() + CONNECTIONS_TTL).toString() }
+                ':expire': { N: getExpiration(CONNECTIONS_TTL).toString() }
             }
         });
     },
     moveExpiration: async (connectionId: string) => {
-        let expire = Date.now() + CONNECTIONS_TTL;
+        let expire = getExpiration(CONNECTIONS_TTL);
         await ddb.updateItem({
             TableName: CONNECTIONS_TABLE,
             Key: {
@@ -112,7 +115,7 @@ export const connectionsTable = {
     }
 }
 
-const ROOM_TTL = process.env.ROOM_TTL ? parseInt(process.env.ROOM_TTL) : 1000 * 60 * 60 * 2;
+const ROOM_TTL = process.env.ROOM_TTL ? parseInt(process.env.ROOM_TTL) : 60 * 60 * 2;
 const ROOM_TABLE = process.env.ROOMS_TABLE || 'gh-turns_rooms';
 export const roomsTable = {
     getAllIds: async () => {
@@ -130,7 +133,7 @@ export const roomsTable = {
             UpdateExpression: 'set roomJson = :roomJson, expire = :expire',
             ExpressionAttributeValues: {
                 ':roomJson': { S: JSON.stringify(room.state) },
-                ':expire': { N: (Date.now() + ROOM_TTL).toString() }
+                ':expire': { N: getExpiration(ROOM_TTL).toString() }
             }
         });
     },
@@ -167,7 +170,7 @@ export const roomsTable = {
             },
             UpdateExpression: 'set expire = :expire',
             ExpressionAttributeValues: {
-                ':expire': { N: (Date.now() + ROOM_TTL).toString() }
+                ':expire': { N: getExpiration(ROOM_TTL).toString() }
             }
         });
     }
