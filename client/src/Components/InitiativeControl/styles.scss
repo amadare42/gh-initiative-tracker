@@ -1,4 +1,3 @@
-// circle
 .InitiativeControl {
 
   &-wrapper {
@@ -23,5 +22,6 @@
     width: calc(5vmin + 1rem);
     height: calc(5vmin + 1rem);
     position: absolute;
+    cursor: pointer;
   }
 }

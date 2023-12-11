@@ -73,7 +73,7 @@ export function Charlist() {
         />)
         : characters.map(char => <CharItem key={ char.id } { ...char }
                                            hideInitiative={ hideInitiativePredicate(char, isPlayerInitiativeReady, isInitiativeReady, playerId) }
-                                           isActive={ char.id == activeCharId }
+                                           isActive={ char.id === activeCharId }
                                            editingId={ editingId }
                                            setEditingId={ setEditingId }
                                            showControls={ showControls }
@@ -90,7 +90,6 @@ export function Charlist() {
                 { charElements }
             </FlipMove>
         </div>
-        {/*<hr style={{ width: '98%', position: 'relative', bottom: 0, overflow: 'hidden' }}/>*/ }
     </div>
 }
 

@@ -14,15 +14,17 @@ export interface InitiativeControlProps {
     setInitiative: (id: number, value: number, isSecondary: boolean) => void;
 }
 
-export function InitiativeControl({
-                                      name,
-                                      initiative,
-                                      secondaryInitiative,
-                                      setInitiative,
-                                      id,
-                                      hideInitiative,
-                                      isSecondary
-                                  }: InitiativeControlProps) {
+export function InitiativeControl(props: InitiativeControlProps) {
+    const {
+        name,
+        initiative,
+        secondaryInitiative,
+        setInitiative,
+        id,
+        hideInitiative,
+        isSecondary
+    } = props;
+
     const [isSetting, setIsSetting] = useState(false);
     const setIsSettingTrue = useCallback(() => {
         navigator.vibrate([10, 30, 20, 10]);
@@ -34,7 +36,7 @@ export function InitiativeControl({
     }, [setInitiative, id]);
     const initiativeToChange = isSecondary ? secondaryInitiative : initiative;
 
-    return <div className={ 'InitiativeControl-wrapper'  }>
+    return <div className={ 'InitiativeControl-wrapper' }>
         <div className={ 'InitiativeControl-circle' } onClick={ setIsSettingTrue }/>
         <div
             className={ 'InitiativeControl-number' }>{ getInitiativeDisplay(initiativeToChange, hideInitiative) }</div>

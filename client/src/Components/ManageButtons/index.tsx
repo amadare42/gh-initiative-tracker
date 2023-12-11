@@ -1,5 +1,5 @@
 import './styles.scss'
-import { FaCog, FaEdit, FaHistory } from 'react-icons/fa';
+import { FaEdit } from 'react-icons/fa';
 import { useAppDispatch, useAppSelector } from '../../store';
 import { uiStateActions } from '../../store/uiStateSlice';
 import classNames from 'classnames';

@@ -16,6 +16,10 @@
     z-index: 1000;
     overflow: hidden;
 
+    &.collapsed {
+      cursor: pointer;
+    }
+
     p, button {
       margin: 0.3em 0;
     }
@@ -95,6 +99,10 @@
 
   &-clientId {
     opacity: 0.5;
+  }
+
+  &-expandedHeader {
+    cursor: pointer;
   }
 }
 

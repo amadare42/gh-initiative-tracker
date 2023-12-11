@@ -34,16 +34,16 @@ export function ButtonsList() {
         }
     }, [inHistoryMode]);
 
-    return <div className={ 'Charlist-buttonsContainer' }>
+    return <div className={ 'ButtonsList-buttonsContainer' }>
         { showControls ?
-            <button className={ 'Charlist-button' } onClick={ () => addChar(true) }>Add Enemy</button> : null }
+            <button className={ 'ButtonsList-button' } onClick={ () => addChar(true) }>Add Enemy</button> : null }
         { showControls ?
-            <button className={ 'Charlist-button' } onClick={ () => addChar(false) }>Add Player</button> : null }
+            <button className={ 'ButtonsList-button' } onClick={ () => addChar(false) }>Add Player</button> : null }
         { showControls && round > 1 ?
-            <button className={ 'Charlist-button' } onClick={ () => toggleHistoryMode() }>Toggle History</button> : null }
+            <button className={ 'ButtonsList-button' } onClick={ () => toggleHistoryMode() }>Toggle History</button> : null }
 
         {
-            isInitiativeReady ? <button className={ 'Charlist-button' }
+            isInitiativeReady ? <button className={ 'ButtonsList-button' }
                   onClick={ () => dispatch(isLastChar ? nextRound() : nextCharacter()) }>
                 { isLastChar ? 'Next Round' : 'Next Character' }
             </button> : null

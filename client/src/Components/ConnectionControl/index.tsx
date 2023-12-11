@@ -12,6 +12,7 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { CopyToClipboard } from '../CopyToClipboard';
 import { ClientHash } from './ClientHash';
 import { omitKeys } from '../../utils/pick';
+import classNames from 'classnames';
 
 export function ConnectionControl() {
     const status = useAppSelector(state => state.connection.status);
@@ -47,12 +48,12 @@ export function ConnectionControl() {
     const connectionId = useAppSelector(state => state.connection.connectionId);
     const roomHref = useMemo(() => window.location.href.split('?')[0] + `?r=${ roomId }`, [roomId]);
 
-    return <div className={ 'ConnectionControl-wrapper' }
+    return <div className={ classNames('ConnectionControl-wrapper', { collapsed: !isDrawerOpened }) }
                 onClick={ () => !isDrawerOpened ? setIsDrawerOpened(true) : null }>
         {
             isDrawerOpened
                 ? <>
-                    <p onClick={ closeDrawer }><ConnectionIcon
+                    <p onClick={ closeDrawer } className={'ConnectionControl-expandedHeader'}><ConnectionIcon
                         status={ status }/> { status == 'Room not found' ? status + ` (${ lastRoomId })` : status }</p>
                     {
                         roomId ? <>
