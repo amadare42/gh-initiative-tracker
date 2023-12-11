@@ -7,7 +7,7 @@ import * as jsonPatch from 'fast-json-patch';
 
 const MESSAGE_COUNT = 10;
 const CONNECTION_ID_KEY = 'store.serverConnection.connectionId';
-const SERVER_URL = process.env.NODE_ENV === 'production'
+const SERVER_URL = (process.env.NODE_ENV === 'production' || process.env.REACT_APP_USE_PROD_SERVER)
     ? 'wss://api.turns.amadare.top'
     : 'ws://localhost:3001/ws';
 

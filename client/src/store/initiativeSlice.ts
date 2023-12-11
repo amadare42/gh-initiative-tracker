@@ -340,23 +340,24 @@ function getUpdatedHistory(state: InitiativeState) {
 
 function updateQueuePrefixed<T>(state: InitiativeState, prefix: string, value: T, newValue: T) {
     const patches = JsonPatch.compare(value, newValue);
-    updateQueue(state, ...patches.map(p => ({
-        ...p,
-        path: prefix + p.path
-    })));
+    // updateQueue(state, ...patches.map(p => ({
+    //     ...p,
+    //     path: prefix + p.path
+    // })));
     return newValue;
 }
 
 function updateQueue(state: InitiativeState, ...patches: JsonPatch.Operation[]) {
-    state.patchesQueue = [
-        ...state.patchesQueue,
-        ...patches
-    ];
+    // state.patchesQueue = [
+    //     ...state.patchesQueue,
+    //     ...patches
+    // ];
 }
 
 function initiativeSortPredicate(a: Character, b: Character) {
-    const ai = (a.initiative ?? 0) + (a.secondaryInitiative ?? 0) * 0.01;
-    const bi = (b.initiative ?? 0) + (b.secondaryInitiative ?? 0) * 0.01;
+    const ai = (a.initiative ?? 0) + (a.secondaryInitiative ?? 99) * 0.01 + (a.isEnemy ? 0.001 : 0);
+    const bi = (b.initiative ?? 0) + (b.secondaryInitiative ?? 99) * 0.01 + (b.isEnemy ? 0.001 : 0);
+
     return ai - bi;
 }
 

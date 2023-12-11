@@ -2,14 +2,14 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import FlipMove from 'react-flip-move';
 import { useAppDispatch, useAppSelector } from '../../store';
 import {
-    initiativeSliceActions as sliceActions,
-    isInitiativeReadySelector,
-    useSelectedInitiativeState,
-    sortedCharactersSelector,
-    setInitiativeAction,
-    isAllPlayersInitiativeReadySelector,
+    changeActorName,
     Character,
-    changeActorName
+    initiativeSliceActions as sliceActions,
+    isAllPlayersInitiativeReadySelector,
+    isInitiativeReadySelector,
+    setInitiativeAction,
+    sortedCharactersSelector,
+    useSelectedInitiativeState
 } from '../../store/initiativeSlice';
 import { CharItem } from '../CharItem';
 
@@ -80,7 +80,7 @@ export function Charlist() {
                                            changeName={ changeName }
                                            isDisabled={ char.isDisabled }
                                            setInitiative={ setInitiative }
-                                           haveSecondaryInitiative={ isInitiativeReady && char.initiative !== null && characters.some(c => c.id !== char.id && c.initiative === char.initiative) }
+                                           haveSecondaryInitiative={ isInitiativeReady && shouldHaveSecondaryInitiative(char, characters) }
                                            setActive={ setActiveCharId }
         />);
 
@@ -92,6 +92,18 @@ export function Charlist() {
         </div>
         {/*<hr style={{ width: '98%', position: 'relative', bottom: 0, overflow: 'hidden' }}/>*/ }
     </div>
+}
+
+function shouldHaveSecondaryInitiative(char: Character, characters: Character[]) {
+    if (char.isEnemy) {
+        return false;
+    }
+    if (char.initiative === null) {
+        return false;
+    }
+    return characters.some(other =>
+        other.id !== char.id
+        && other.initiative === char.initiative);
 }
 
 function hideInitiativePredicate(char: Character, isPlayerInitiativeReady: boolean, isInitiativeReady: boolean, playerId: string) {
