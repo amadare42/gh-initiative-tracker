@@ -84,7 +84,7 @@ module.exports.handler = async (event, context) => {
         }
     }
     finally {
-        await Promise.all(promises);
+        await Promise.allSettled(promises);
     }
 
     console.log(event, context);

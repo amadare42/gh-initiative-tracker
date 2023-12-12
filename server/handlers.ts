@@ -100,16 +100,14 @@ export const handlers = createHandlers({
         connectionIds = connectionIds.filter(conId => conId !== connectionId);
         const playersConnected = connectionIds.length + 1;
 
-        await Promise.all([
+        await Promise.allSettled([
             connectionsTable.linkConnectionToRoom(connectionId, room.id),
             sendPlayerLeft(sendMsg, connection, tailend),
             sendWelcome(sendMsg, connection, room, playersConnected),
-            (async () => {
-                await broadcastMsg(sendMsg,{
-                    type: 'room.playerJoined',
-                    data: { playerId: connection.clientId, playersConnected }
-                }, connectionIds);
-            })()
+            broadcastMsg(sendMsg, {
+                type: 'room.playerJoined',
+                data: { playerId: connection.clientId, playersConnected }
+            }, connectionIds)
         ]);
         console.log(`Joined room ${ room.id } by ${ connectionId } (clientId ${ payload.playerId })`);
     },
@@ -128,7 +126,7 @@ export const handlers = createHandlers({
 
         let connectionsIds = await connectionsTable.getConnectionIdsForRoom(connection.roomId);
         connectionsIds = connectionsIds.filter(conId => conId !== connectionId);
-        await broadcastMsg(sendMsg,{
+        await broadcastMsg(sendMsg, {
             type: 'room.playerLeft',
             data: {
                 playerId: connection.clientId,
@@ -269,6 +267,10 @@ async function sendPlayerLeft(sendMsg: SendMessageFn, connection: ConnectionEntr
 
 async function broadcastMsg(sendMsg: SendMessageFn, message: Message, connectionIds: string[]) {
     const promises = connectionIds.map(async connectionId => {
+        if (connectionId === message.data.playerId) {
+            return;
+        }
+
         try {
             await sendMsg(connectionId, message);
         } catch (e) {
@@ -276,23 +278,29 @@ async function broadcastMsg(sendMsg: SendMessageFn, message: Message, connection
                 console.log(`Found stale connection, deleting ${ connectionId }`);
                 await connectionsTable.delete(connectionId);
             } else {
+                console.log('error broadcasting message', e);
                 throw e;
             }
         }
     });
 
-    await Promise.all(promises);
+    await Promise.allSettled(promises);
 }
 
 async function sendWelcome(sendMsg: SendMessageFn, connection: ConnectionEntry, room: RoomEntry, playersConnected?: number) {
     let connectionIds = await connectionsTable.getConnectionIdsForRoom(room.id);
-    await sendMsg(connection.connectionId, {
-        type: 'room.welcome',
-        data: {
-            roomId: room.id,
-            roomState: room.state,
-            playerId: connection.clientId,
-            playersConnected: playersConnected ?? connectionIds.length
-        }
-    });
+    try {
+        await sendMsg(connection.connectionId, {
+            type: 'room.welcome',
+            data: {
+                roomId: room.id,
+                roomState: room.state,
+                playerId: connection.clientId,
+                playersConnected: playersConnected ?? connectionIds.length
+            }
+        });
+    } catch (e) {
+        console.log('error sending welcome', e);
+        throw e;
+    }
 }
