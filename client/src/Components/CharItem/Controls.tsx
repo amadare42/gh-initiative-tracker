@@ -15,17 +15,15 @@ interface Props {
 export function CharItemControls({ actorId, show, isDisabled }: Props) {
     const dispatch = useAppDispatch();
     const toggleDisabled = useCallback(() => dispatch(initiativeSliceActions.toggleDisabled(actorId)), [dispatch, actorId]);
-    const { open } = useOverlay(close => <SelectAvatarList actorId={actorId} close={close} />)
+    const { open } = useOverlay('avatar', close => <SelectAvatarList actorId={ actorId } close={ close }/>)
 
-    return <div className={ 'CharItem-controls' }>
-        { show ? <>
-                <FlatIconButton icon={ FaCertificate } title={ 'Set avatar' } onClick={() => open()}/>
-                <FlatIconButton title={ 'Remove actor' } icon={ FaTrash }
-                                onClick={ () => dispatch(removeActor(actorId)) }/>
-                <FlatIconButton title={ 'Toggle actor active' } icon={ isDisabled ? FaTimesCircle : FaCheckCircle }
-                                onClick={ toggleDisabled }/>
-            </>
-            : null }
-    </div>
+    return show ? <div className={ 'CharItem-controls' }>
+            <FlatIconButton icon={ FaCertificate } title={ 'Set avatar' } onClick={ () => open() }/>
+            <FlatIconButton title={ 'Remove actor' } icon={ FaTrash }
+                            onClick={ () => dispatch(removeActor(actorId)) }/>
+            <FlatIconButton title={ 'Toggle actor active' } icon={ isDisabled ? FaTimesCircle : FaCheckCircle }
+                            onClick={ toggleDisabled }/>
+        </div>
+        : null
 
 }

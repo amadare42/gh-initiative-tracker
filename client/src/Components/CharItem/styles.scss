@@ -6,12 +6,11 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    cursor: pointer;
   }
 
   &-name {
     user-select: none;
-    max-height: 6vmin;
+    max-height: 2em;
     overflow: hidden;
   }
 
@@ -19,9 +18,9 @@
     border: 4px solid #ccc;
     z-index: 1;
     width: 50vmin;
-    height: 5vmin;
+    line-height: 1em;
+    height: calc(1.5em);
     display: flex;
-    line-height: 3vmin;
     border-radius: 5px;
     margin: 1rem 0.5rem;
     padding: 0.5rem;
@@ -84,6 +83,7 @@
     display: flex;
     gap: 1rem;
     margin: 0.5rem 1rem 0.5rem 0.5rem;
+    animation: scaledAppear 0.2s ease-in-out;
   }
 }
 

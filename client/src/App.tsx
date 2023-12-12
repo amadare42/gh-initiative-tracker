@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import './App.scss';
 import { Charlist } from './Components/Charlist';
 import { RoundCounter } from './Components/RoundCounter';
@@ -21,7 +21,28 @@ function App() {
     useDeeplink();
     usePrefetchImages();
 
-    const [overlay, setOverlay] = useState<JSX.Element>(null);
+    const [overlayName, setOverlayName] = useState<string>(null);
+    const [overlayElement, setOverlayElement] = useState<JSX.Element>(null);
+    const setOverlay = useCallback((element: JSX.Element, name: string) => {
+        setOverlayElement(element);
+        setOverlayName(name);
+    }, []);
+
+    const closeOverlay = useCallback(() => {
+        setOverlayElement(null);
+        setOverlayName(null);
+        window.history.replaceState({}, '', '');
+    }, []);
+
+    useEffect(() => {
+        if (overlayName) {
+            window.history.pushState({}, '', ``);
+            window.addEventListener("popstate", closeOverlay);
+        } else {
+            window.removeEventListener("popstate", closeOverlay);
+            window.history.replaceState({}, '', '');
+        }
+    }, [overlayName]);
 
     return (
         <div className="App">
@@ -36,10 +57,10 @@ function App() {
                         <ButtonsList/>
                         <ChangeLocale />
 
-                        { overlay
+                        { overlayElement
                             ? <>
-                                <div className={ 'overlay' } onClick={ () => setOverlay(null) }/>
-                                { overlay }
+                                <div className={ 'overlay' } onClick={ () => setOverlayElement(null) }/>
+                                { overlayElement }
                             </>
                             : null
                         }

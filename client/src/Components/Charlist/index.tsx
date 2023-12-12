@@ -86,7 +86,7 @@ export function Charlist() {
 
     return <div className={ 'Charlist-wrapper' }>
         <div className={ 'Charlist-scrollable' } ref={ scrollableRef }>
-            <FlipMove>
+            <FlipMove enterAnimation={'fade'}>
                 { charElements }
             </FlipMove>
         </div>

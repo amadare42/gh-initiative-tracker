@@ -20,6 +20,7 @@
     height: var(--ElementsPanel-size);
     width: var(--ElementsPanel-size);
     cursor: pointer;
+    animation: ElementsPanel-VisibilityBtn-appear 0.2s ease-in-out;
 
     svg {
       width: 60%;
@@ -110,5 +111,16 @@
     &.fire.inert .outline {
       filter: invert(100%) brightness(150%) saturate(0%) !important;
     }
+  }
+}
+
+@keyframes ElementsPanel-VisibilityBtn-appear {
+  0% {
+    width: 0;
+    height: 0;
+  }
+  100% {
+    width: var(--ElementsPanel-size);
+    height: var(--ElementsPanel-size);
   }
 }

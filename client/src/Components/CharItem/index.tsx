@@ -1,4 +1,4 @@
-import React, { ForwardedRef, forwardRef, useCallback } from 'react';
+import React, { ForwardedRef, forwardRef, useCallback, useEffect, useRef } from 'react';
 import classNames from 'classnames';
 import { InitiativeControl } from '../InitiativeControl';
 
@@ -40,6 +40,7 @@ export const CharItem = forwardRef((props: Props, ref: ForwardedRef<HTMLDivEleme
 
     const avatarUrl = props.avatar ? `/avatars/${ props.avatar }` : null;
     const isEditingName = props.editingId === props.id;
+    const localizedName = t(name);
 
     return <div className={ classNames('CharItem-wrapper', {
         enemy: props.isEnemy,
@@ -51,8 +52,8 @@ export const CharItem = forwardRef((props: Props, ref: ForwardedRef<HTMLDivEleme
     }) } style={ { '--url': `url(${ avatarUrl })` } as any } ref={ innerRef }>
         <div className={ 'CharItem-background' }/>
         { !isEditingName ? <>
-            <InitiativeControl { ...props } isSecondary={ false }/>
-            { haveSecondaryInitiative ? <InitiativeControl { ...props } isSecondary={ true }/> : null }
+            <InitiativeControl { ...props } name={localizedName} isSecondary={ false }/>
+            { haveSecondaryInitiative ? <InitiativeControl { ...props } name={localizedName} isSecondary={ true }/> : null }
         </> : null }
         <MobileClickHandler secondaryAction={ setEditing }
                             primaryAction={ props.showControls ? setEditing : setActive }>
@@ -60,12 +61,9 @@ export const CharItem = forwardRef((props: Props, ref: ForwardedRef<HTMLDivEleme
                 handlers => <div className={ 'CharItem-body' } { ...handlers }>
                     {
                         isEditingName
-                            ? <input defaultValue={ name }
-                                     onBlur={ ev => {
-                                         props.setEditingId(null);
-                                         changeName(id, ev.currentTarget.value)
-                                     } } autoFocus={ true }/>
-                            : <span className={ 'CharItem-name' }>{ t(props.name) }</span>
+                            ? <NameEdit name={ t(name) } changeName={ changeName } id={ id }
+                                        setEditingId={ props.setEditingId }/>
+                            : <span className={ 'CharItem-name' }>{ localizedName }</span>
                     }
                 </div>
             }
@@ -73,3 +71,48 @@ export const CharItem = forwardRef((props: Props, ref: ForwardedRef<HTMLDivEleme
         <CharItemControls show={ props.showControls } isDisabled={ props.isDisabled } actorId={ id }/>
     </div>
 });
+
+interface NameEditProps {
+    name: string,
+    changeName: (id: number, name: string) => void,
+    id: number,
+    setEditingId: (id: number | null) => void
+}
+
+function NameEdit({ name, changeName, id, setEditingId }: NameEditProps) {
+    const inputRef = useRef<HTMLInputElement>(null);
+
+    const submit = useCallback(() => {
+        setEditingId(null);
+        if (name !== inputRef.current?.value) {
+            changeName(id, inputRef.current.value ?? name);
+        }
+    }, [setEditingId, changeName, id, inputRef, name]);
+    const cancel = useCallback(() => {
+        setEditingId(null);
+    }, [setEditingId]);
+
+
+    useEffect(() => {
+        window.history.pushState({}, '', ``);
+        window.addEventListener("popstate", cancel);
+        return () => {
+            window.removeEventListener("popstate", cancel);
+            window.history.replaceState({}, '', '');
+        }
+    }, [cancel]);
+
+    return <form onSubmit={ e => {
+        e.preventDefault();
+        submit();
+    } }>
+        <input defaultValue={ name } onBlur={ submit } autoFocus={ true } ref={ inputRef } onKeyDown={ (event) => {
+            if (event.key === 'Escape') {
+                setEditingId(null);
+            }
+            if (event.key === 'Enter') {
+                submit();
+            }
+        } }/>
+    </form>
+}

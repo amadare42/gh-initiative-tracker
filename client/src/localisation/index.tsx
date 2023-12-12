@@ -10,7 +10,8 @@ export const LocalizationContext = createContext({
 
 export function LocalizationProvider({ children }: any) {
     const isBrowserUa = navigator.language == 'uk-UA';
-    const [locale, setLocale] = useLocalStorage('locale', isBrowserUa ? 'ua' : 'en');
+    const [locale, setLocale] = useLocalStorage<string>('locale', isBrowserUa ? 'ua' : 'en');
+
     const t = (value: string) => {
         let localizedValue = value;
         switch (locale) {

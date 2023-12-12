@@ -4,6 +4,8 @@
   align-items: center;
   gap: 1rem;
   user-select: none;
+  line-height: 1em;
+  margin-top: 0.7em;
 
   &.history::after {
     content: '(history)';

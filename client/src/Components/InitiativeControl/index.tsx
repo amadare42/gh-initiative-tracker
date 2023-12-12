@@ -30,7 +30,7 @@ export function InitiativeControl(props: InitiativeControlProps) {
 
     const initiativeToChange = isSecondary ? secondaryInitiative : initiative;
 
-    const { open, close } = useOverlay(close =>
+    const { open, close } = useOverlay('initiative', close =>
         <RadialNumberSelect initialValue={ initiativeToChange }
                             name={ name }
                             hideValue={ hideInitiative }

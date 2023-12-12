@@ -68,7 +68,7 @@ export function ElementsPanel() {
 function ElementIcon({ index, state, inHistory }: { index: number, state: ElementState, inHistory?: boolean }) {
     const dispatch = useAppDispatch();
     const vibrate = useVibrate();
-    const activateElement = useCallback(() => {
+    const onClick = useCallback(() => {
         if (inHistory) return;
 
         if (state === ElementState.Inert) {
@@ -79,15 +79,23 @@ function ElementIcon({ index, state, inHistory }: { index: number, state: Elemen
             dispatch(initiativeSliceActions.setElementState({ element: index, state: ElementState.Inert }));
         }
     }, [index, state, inHistory]);
-    const setWaning = useCallback((e) => {
+    const onLongClick = useCallback((e) => {
         e.preventDefault();
         if (inHistory) return;
 
         vibrate([10, 40, 30, 10]);
-        dispatch(initiativeSliceActions.setElementState({ element: index, state: ElementState.Waning }));
+        let newState: ElementState;
+        if (state === ElementState.Strong) {
+            newState = ElementState.Waning;
+        } else if (state === ElementState.Waning) {
+            newState = ElementState.Strong;
+        } else {
+            newState = ElementState.Waning;
+        }
+        dispatch(initiativeSliceActions.setElementState({ element: index, state: newState }));
     }, [index, state, inHistory]);
 
-    const handlers = useLongPress(setWaning, activateElement);
+    const handlers = useLongPress(onLongClick, onClick);
     const preventDefault = useCallback((e) => {
         e.preventDefault();
     }, []);
