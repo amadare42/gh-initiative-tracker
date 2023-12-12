@@ -12,24 +12,25 @@ import {
 import './styles.scss';
 import classNames from 'classnames';
 
-export interface DrawerProps {
+export interface RadialNumberSelectProps {
     name: string;
     initialValue: number | null
+    hideValue: boolean;
+    close: () => void,
     onValueSet: (value: number) => void;
 }
 
-export function RadialNumberSelect({ name, initialValue, onValueSet }: DrawerProps) {
+export function RadialNumberSelect({ name, initialValue, onValueSet, close, hideValue }: RadialNumberSelectProps) {
     let [isOpen, setIsOpen] = useState(false);
     let [total, setTotal] = useState(initialValue);
     let [isSecond, setIsSecond] = useState(false);
-    let [isDone, setIsDone] = useState(false);
-    const drawerContext = useContext(DrawerContext);
+    const overlayContext = useContext(NumberSelectOverlayContext);
     useEffect(() => {
         setIsOpen(true);
-        drawerContext.setIsDrawerOpened(true);
+        overlayContext.setIsOpened(true);
         return () => {
             setIsOpen(false);
-            drawerContext.setIsDrawerOpened(false);
+            overlayContext.setIsOpened(false);
         }
     }, []);
 
@@ -112,7 +113,7 @@ export function RadialNumberSelect({ name, initialValue, onValueSet }: DrawerPro
                                    onTouchMove={onTouchMove}
                                    onTouchEnd={onTouchEnd}
                                    onMouseUp={onMouseUp}
-                                   className={classNames('Drawer-numItem', { darken: isDone })}>
+                                   className={classNames('Drawer-numItem')}>
                     <span>{ k }</span>
                     <span className={ 'darken' }>0</span>
                 </div>
@@ -123,7 +124,7 @@ export function RadialNumberSelect({ name, initialValue, onValueSet }: DrawerPro
                                    onTouchMove={onTouchMove}
                                    onMouseLeave={onMouseLeave}
                                    onMouseUp={onMouseUp}
-                                   className={classNames('Drawer-numItem', { darken: isDone })}>
+                                   className={classNames('Drawer-numItem')}>
                     <span className={ 'darken' }>{ total }</span>
                     <span>{k}</span>
                 </div>
@@ -138,11 +139,7 @@ export function RadialNumberSelect({ name, initialValue, onValueSet }: DrawerPro
         buttons.push(buttons.shift()!);
 
         return buttons;
-    }, [isSecond, total, isDone, ...evts]);
-
-    let onCancel = useCallback(() => {
-        onValueSet(initialValue)
-    }, [initialValue, onValueSet]);
+    }, [isSecond, total, ...evts]);
 
     return <div className={ 'Drawer-container' }>
         {
@@ -177,14 +174,14 @@ export function RadialNumberSelect({ name, initialValue, onValueSet }: DrawerPro
                 </div>
             }).filter(e => !!e)
         }
-        <div className={ 'Drawer-centeredContainer' + (isOpen ? ' isOpen' : '') } onClick={ onCancel }>
+        <div className={ 'Drawer-centeredContainer' + (isOpen ? ' isOpen' : '') } onClick={ close }>
             <span>{ name }</span>
-            { total == null ? '??' : total }
+            { total == null || hideValue ? '??' : total }
         </div>
     </div>
 }
 
-export const DrawerContext = createContext({
-    isDrawerOpened: false, setIsDrawerOpened: (v: boolean) => {
+export const NumberSelectOverlayContext = createContext({
+    isOpened: false, setIsOpened: (v: boolean) => {
     }
 });

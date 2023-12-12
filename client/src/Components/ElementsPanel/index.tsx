@@ -7,6 +7,7 @@ import useLongPress from '../../utils/useLongPress';
 import { FaEyeLowVision } from 'react-icons/fa6';
 import { FaEye } from 'react-icons/fa';
 import { uiStateActions } from '../../store/uiStateSlice';
+import { useVibrate } from '../../hooks/useVibrate';
 
 export const ELEMENTS = [
     'Wind', 'Ice', 'Fire', 'Earth', 'Light', 'Dark'
@@ -66,14 +67,15 @@ export function ElementsPanel() {
 
 function ElementIcon({ index, state, inHistory }: { index: number, state: ElementState, inHistory?: boolean }) {
     const dispatch = useAppDispatch();
+    const vibrate = useVibrate();
     const activateElement = useCallback(() => {
         if (inHistory) return;
 
         if (state === ElementState.Inert) {
-            navigator.vibrate([10, 30, 20, 10]);
+            vibrate([10, 30, 20, 10]);
             dispatch(initiativeSliceActions.setElementState({ element: index, state: ElementState.Strong }));
         } else {
-            navigator.vibrate([10, 40, 30, 10]);
+            vibrate([10, 40, 30, 10]);
             dispatch(initiativeSliceActions.setElementState({ element: index, state: ElementState.Inert }));
         }
     }, [index, state, inHistory]);
@@ -81,7 +83,7 @@ function ElementIcon({ index, state, inHistory }: { index: number, state: Elemen
         e.preventDefault();
         if (inHistory) return;
 
-        navigator.vibrate([10, 40, 30, 10]);
+        vibrate([10, 40, 30, 10]);
         dispatch(initiativeSliceActions.setElementState({ element: index, state: ElementState.Waning }));
     }, [index, state, inHistory]);
 

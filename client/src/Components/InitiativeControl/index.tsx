@@ -1,8 +1,9 @@
 import React, { useCallback, useState } from 'react';
-import { RadialNumberSelect } from '../RadialNumberSelect';
+import { RadialNumberSelect, RadialNumberSelectProps } from '../RadialNumberSelect';
 import { createPortal } from 'react-dom';
 
 import './styles.scss';
+import { useVibrate } from '../../hooks/useVibrate';
 
 export interface InitiativeControlProps {
     name: string;
@@ -26,8 +27,10 @@ export function InitiativeControl(props: InitiativeControlProps) {
     } = props;
 
     const [isSetting, setIsSetting] = useState(false);
+
+    const vibrate = useVibrate();
     const setIsSettingTrue = useCallback(() => {
-        navigator.vibrate([10, 30, 20, 10]);
+        vibrate([10, 30, 20, 10]);
         setIsSetting(true);
     }, []);
     const onInitiativeSet = useCallback((value: number) => {
@@ -37,14 +40,24 @@ export function InitiativeControl(props: InitiativeControlProps) {
     const initiativeToChange = isSecondary ? secondaryInitiative : initiative;
 
     return <div className={ 'InitiativeControl-wrapper' }>
-        <div className={ 'InitiativeControl-circle' } onClick={ setIsSettingTrue }/>
-        <div
-            className={ 'InitiativeControl-number' }>{ getInitiativeDisplay(initiativeToChange, hideInitiative) }</div>
-        { isSetting ? createPortal(<div className={ 'overlay' }/>, document.querySelector('.App-header')) : null }
-        { isSetting ? createPortal(<RadialNumberSelect initialValue={ initiativeToChange }
-                                                       name={ name }
-                                                       onValueSet={ onInitiativeSet }/>, document.querySelector('.App-header')) : null }
+        <div className={ 'InitiativeControl-clickCatch' } onClick={ setIsSettingTrue }/>
+        <div className={ 'InitiativeControl-number' }>{ getInitiativeDisplay(initiativeToChange, hideInitiative) }</div>
+        { isSetting
+            ? createPortal(<SelectInitiativeOverlay initialValue={ initiativeToChange }
+                                                    name={ name }
+                                                    hideValue={ hideInitiative }
+                                                    close={ () => setIsSetting(false) }
+                                                    onValueSet={ onInitiativeSet }/>, document.querySelector('.App-header'))
+            : null
+        }
     </div>
+}
+
+function SelectInitiativeOverlay(props: RadialNumberSelectProps) {
+    return <>
+        <div className={ 'overlay' }/>
+        <RadialNumberSelect { ...props }/>
+    </>
 }
 
 function getInitiativeDisplay(initiative: number, hideInitiative: boolean) {

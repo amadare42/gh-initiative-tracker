@@ -1,22 +1,14 @@
-import { initiativeSliceActions, removeActor } from '../../store/initiativeSlice';
-import React, {
-    DOMAttributes,
-    ForwardedRef,
-    forwardRef,
-    useCallback,
-    useEffect,
-    useImperativeHandle,
-    useRef
-} from 'react';
-import useLongPress from '../../utils/useLongPress';
+import React, { ForwardedRef, forwardRef, useCallback } from 'react';
 import classNames from 'classnames';
 import { InitiativeControl } from '../InitiativeControl';
-import { FaCheckCircle, FaTimesCircle, FaTrash } from 'react-icons/fa';
-import { useAppDispatch } from '../../store';
 
 import './styles.scss';
+import { useScrollIntoViewWhenActive } from './useScrollIntoViewWhenActive';
+import { CharItemControls } from './Controls';
+import { MobileClickHandler } from '../ClickHandler';
+import { useForwardedRef } from '../../hooks/useForwardedRef';
 
-export interface CharItemProps {
+export interface Props {
     name: string;
     id: number;
     isEnemy: boolean;
@@ -35,23 +27,13 @@ export interface CharItemProps {
     haveSecondaryInitiative: boolean;
 }
 
-export const CharItem = forwardRef((props: CharItemProps, ref: ForwardedRef<HTMLDivElement>) => {
+export const CharItem = forwardRef((props: Props, ref: ForwardedRef<HTMLDivElement>) => {
     const { name, changeName, id, isActive, haveSecondaryInitiative } = props;
     const setActive = useCallback(() => props.setActive(id), [props.setActive, id]);
     const setEditing = useCallback(() => props.setEditingId && props.setEditingId(id), [props.setEditingId, id]);
 
-    const dispatch = useAppDispatch();
-    const toggleDisabled = useCallback(() => {
-        dispatch(initiativeSliceActions.toggleDisabled(id))
-    }, [dispatch, id]);
-
-    const innerRef = useRef<HTMLInputElement>(null);
-    useImperativeHandle(ref, () => innerRef.current!, []);
-    useEffect(() => {
-        if (isActive) {
-            setTimeout(() => innerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
-        }
-    }, [isActive]);
+    const innerRef = useForwardedRef<HTMLDivElement>(ref);
+    useScrollIntoViewWhenActive(isActive, innerRef);
 
     return <div className={ classNames('CharItem-wrapper', {
         enemy: props.isEnemy,
@@ -77,36 +59,6 @@ export const CharItem = forwardRef((props: CharItemProps, ref: ForwardedRef<HTML
                 </div>
             }
         </MobileClickHandler>
-        {
-            props.showControls ? <div className={ 'CharItem-controls' }>
-                <FaTrash onClick={ () => dispatch(removeActor(id)) }/>
-                {
-                    props.isDisabled ? <FaTimesCircle onClick={ () => toggleDisabled() }/> :
-                        <FaCheckCircle onClick={ () => toggleDisabled() }/>
-                }
-            </div> : <div className={ 'CharItem-controls' }/>
-        }
-
+        <CharItemControls show={props.showControls} isDisabled={props.isDisabled} actorId={id} />
     </div>
 });
-
-interface ClickHandlerProps {
-    children: (handlers: Partial<DOMAttributes<HTMLElement>>) => JSX.Element;
-    primaryAction: () => void;
-    secondaryAction: () => void;
-}
-
-function MobileClickHandler({ children, primaryAction, secondaryAction }: ClickHandlerProps) {
-    const handlers = useLongPress(secondaryAction, primaryAction, {
-        shouldPreventDefault: false,
-        delay: 500,
-    });
-    return children(handlers);
-}
-
-function DesktopClickHandler({ children, primaryAction, secondaryAction }: ClickHandlerProps) {
-    return children({
-        onClick: primaryAction,
-        onDoubleClick: secondaryAction
-    });
-}

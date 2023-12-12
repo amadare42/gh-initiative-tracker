@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import './App.scss';
 import { Charlist } from './Components/Charlist';
-import { DrawerContext } from './Components/RadialNumberSelect';
+import { NumberSelectOverlayContext } from './Components/RadialNumberSelect';
 import { RoundCounter } from './Components/RoundCounter';
 import { ButtonsList } from './Components/ButtonsList';
 import { ManageButtons } from './Components/ManageButtons';
@@ -9,7 +9,7 @@ import { useDispatch } from 'react-redux';
 import { connectAction, createRoomAction, joinRoomAction } from './store/serverConnectionSlice';
 import { store } from './store';
 import { ConnectionControl } from './Components/ConnectionControl';
-import { useDeeplink } from './hooks/deeplink';
+import { useDeeplink } from './hooks/useDeeplink';
 import { ElementsPanel } from './Components/ElementsPanel';
 import { omitKeys } from './utils/pick';
 
@@ -17,10 +17,10 @@ function App() {
 
     useDeeplink();
 
-    const [isDrawerOpened, setIsDrawerOpened] = useState(false);
+    const [isOverlayOpened, setIsOverlayOpened] = useState(false);
     return (
         <div className="App">
-            <DrawerContext.Provider value={ { isDrawerOpened, setIsDrawerOpened } }>
+            <NumberSelectOverlayContext.Provider value={ { isOpened: isOverlayOpened, setIsOpened: setIsOverlayOpened } }>
                 <header className="App-header">
                     <ConnectionControl/>
                     <ManageButtons/>
@@ -29,7 +29,7 @@ function App() {
                     <Charlist/>
                     <ButtonsList/>
                 </header>
-            </DrawerContext.Provider>
+            </NumberSelectOverlayContext.Provider>
             <Debug/>
         </div>
     );

@@ -18,9 +18,10 @@
     user-select: none;
   }
 
-  &-circle {
+  &-clickCatch {
     width: calc(5vmin + 1rem);
     height: calc(5vmin + 1rem);
+    margin-left: -1rem;
     position: absolute;
     cursor: pointer;
   }
