@@ -11,12 +11,14 @@ import {
 import { uiStateActions } from '../../store/uiStateSlice';
 
 import './styles.scss'
+import { useLocalize } from '../../localisation';
 
 export function ButtonsList() {
     const dispatch = useAppDispatch();
     const isLastChar = useSelectedInitiativeState(isLastActorSelector);
     const isInitiativeReady = useSelectedInitiativeState(isInitiativeReadySelector);
     const showControls = useAppSelector(state => state.ui.isExtraControlsVisible);
+    const t = useLocalize();
     const addChar = useCallback((isEnemy: boolean) => {
         dispatch(addActor({
             name: isEnemy ? 'Enemy' : 'New Character',
@@ -36,16 +38,16 @@ export function ButtonsList() {
 
     return <div className={ 'ButtonsList-buttonsContainer' }>
         { showControls ?
-            <button className={ 'ButtonsList-button' } onClick={ () => addChar(true) }>Add Enemy</button> : null }
+            <button className={ 'ButtonsList-button' } onClick={ () => addChar(true) }>{t('Add Enemy')}</button> : null }
         { showControls ?
-            <button className={ 'ButtonsList-button' } onClick={ () => addChar(false) }>Add Player</button> : null }
+            <button className={ 'ButtonsList-button' } onClick={ () => addChar(false) }>{t('Add Player')}</button> : null }
         { showControls && round > 1 ?
-            <button className={ 'ButtonsList-button' } onClick={ () => toggleHistoryMode() }>Toggle History</button> : null }
+            <button className={ 'ButtonsList-button' } onClick={ () => toggleHistoryMode() }>{t('Toggle History')}</button> : null }
 
         {
             isInitiativeReady ? <button className={ 'ButtonsList-button' }
                   onClick={ () => dispatch(isLastChar ? nextRound() : nextCharacter()) }>
-                { isLastChar ? 'Next Round' : 'Next Character' }
+                { isLastChar ? t('Next Round') : t('Next Character') }
             </button> : null
         }
     </div>

@@ -11,10 +11,13 @@
 
   &-name {
     user-select: none;
+    max-height: 6vmin;
+    overflow: hidden;
   }
 
   &-wrapper {
     border: 4px solid #ccc;
+    z-index: 1;
     width: 50vmin;
     height: 5vmin;
     display: flex;
@@ -25,6 +28,11 @@
     align-items: center;
     justify-content: space-between;
     transition: transform 0.2s ease-in-out;
+    background: linear-gradient(to left, #66666650, var(--bg), var(--bg)), var(--url) no-repeat center right;
+
+    &.noImage {
+      background: var(--bg);
+    }
 
     @media (max-width: 768px) {
       width: 80vw;
@@ -32,12 +40,12 @@
 
     &.enemy {
       border-color: #8a1b1b;
-      background: #3b1d1d;
+      --bg: #3b1d1d;
     }
 
     &.player {
       border-color: #537f86;
-      background: #162d2d;
+      --bg: #162d2d;
     }
 
     &.haveSecondary .CharItem-body {
@@ -75,10 +83,6 @@
   &-controls {
     display: flex;
     gap: 1rem;
-
-    //flex-direction: column;
-    //align-items: center;
-    //justify-content: center;
     margin: 0.5rem 1rem 0.5rem 0.5rem;
   }
 }

@@ -1,0 +1,28 @@
+.ChangeLocale-button {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+
+  background: #ffffff;
+
+  border: 4px solid #ccc;
+  height: 6vmin;
+  cursor: pointer;
+  min-height: 2rem;
+  justify-content: center;
+  display: flex;
+  line-height: 3vmin;
+  min-width: 2rem;
+  border-radius: 5px;
+  margin: 0.5rem;
+  padding: 0.5rem;
+  align-items: center;
+  font-size: calc(10px + 2vmin);
+
+  font-family: 'Open Sans', sans-serif;
+
+  & img {
+    height: 3rem;
+    width: 3rem;
+  }
+}

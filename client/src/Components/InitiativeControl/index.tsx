@@ -1,9 +1,9 @@
-import React, { useCallback, useState } from 'react';
-import { RadialNumberSelect, RadialNumberSelectProps } from '../RadialNumberSelect';
-import { createPortal } from 'react-dom';
+import React, { useCallback } from 'react';
+import { RadialNumberSelect } from '../RadialNumberSelect';
 
 import './styles.scss';
 import { useVibrate } from '../../hooks/useVibrate';
+import { useOverlay } from '../../utils/overlay';
 
 export interface InitiativeControlProps {
     name: string;
@@ -26,38 +26,29 @@ export function InitiativeControl(props: InitiativeControlProps) {
         isSecondary
     } = props;
 
-    const [isSetting, setIsSetting] = useState(false);
-
     const vibrate = useVibrate();
-    const setIsSettingTrue = useCallback(() => {
-        vibrate([10, 30, 20, 10]);
-        setIsSetting(true);
-    }, []);
-    const onInitiativeSet = useCallback((value: number) => {
-        setInitiative(id, value, isSecondary);
-        setIsSetting(false);
-    }, [setInitiative, id]);
+
     const initiativeToChange = isSecondary ? secondaryInitiative : initiative;
 
-    return <div className={ 'InitiativeControl-wrapper' }>
-        <div className={ 'InitiativeControl-clickCatch' } onClick={ setIsSettingTrue }/>
-        <div className={ 'InitiativeControl-number' }>{ getInitiativeDisplay(initiativeToChange, hideInitiative) }</div>
-        { isSetting
-            ? createPortal(<SelectInitiativeOverlay initialValue={ initiativeToChange }
-                                                    name={ name }
-                                                    hideValue={ hideInitiative }
-                                                    close={ () => setIsSetting(false) }
-                                                    onValueSet={ onInitiativeSet }/>, document.querySelector('.App-header'))
-            : null
-        }
-    </div>
-}
+    const { open, close } = useOverlay(close =>
+        <RadialNumberSelect initialValue={ initiativeToChange }
+                            name={ name }
+                            hideValue={ hideInitiative }
+                            close={ close }
+                            onValueSet={ onInitiativeSet }/>);
+    const onInitiativeSet = useCallback((value: number) => {
+        setInitiative(id, value, isSecondary);
+        close();
+    }, [setInitiative, id, close]);
+    const openOverlay = useCallback(() => {
+        vibrate([10, 30, 20, 10]);
+        open();
+    }, [open]);
 
-function SelectInitiativeOverlay(props: RadialNumberSelectProps) {
-    return <>
-        <div className={ 'overlay' }/>
-        <RadialNumberSelect { ...props }/>
-    </>
+    return <div className={ 'InitiativeControl-wrapper' }>
+        <div className={ 'InitiativeControl-clickCatch' } onClick={ openOverlay }/>
+        <div className={ 'InitiativeControl-number' }>{ getInitiativeDisplay(initiativeToChange, hideInitiative) }</div>
+    </div>
 }
 
 function getInitiativeDisplay(initiative: number, hideInitiative: boolean) {

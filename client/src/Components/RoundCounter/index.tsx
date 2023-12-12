@@ -5,6 +5,7 @@ import classNames from 'classnames';
 import { uiStateActions } from '../../store/uiStateSlice';
 
 import './styles.scss';
+import { useLocalize } from '../../localisation';
 
 export function RoundCounter() {
     const round = useAppSelector(state => state.initiative.round);
@@ -12,6 +13,7 @@ export function RoundCounter() {
     const dispatch = useAppDispatch();
     const isHistoryMode = useAppSelector(state => state.ui.isInHistoryMode);
     const historyRound = useAppSelector(state => state.ui.historyRound);
+    const t = useLocalize();
 
     return (
         <div className={classNames("RoundCounter-wrapper", { history: isHistoryMode })}>
@@ -23,7 +25,7 @@ export function RoundCounter() {
                 isEditingMode && !isHistoryMode ?
                     <FaMinusCircle style={{ opacity: round == 1 ? 0.5 : 1 }} onClick={ () => dispatch(initiativeSliceActions.changeRound(round - 1)) }/> : null
             }
-            <h1>Round { isHistoryMode ? historyRound : round }</h1>
+            <h1>{t('Round')} { isHistoryMode ? historyRound : round }</h1>
             {
                 isEditingMode && !isHistoryMode ?
                     <FaPlusCircle onClick={ () => dispatch(initiativeSliceActions.changeRound(round + 1)) }/> : null

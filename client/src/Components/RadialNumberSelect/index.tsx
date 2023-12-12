@@ -1,14 +1,4 @@
-import {
-    createContext,
-    MouseEventHandler,
-    TouchEventHandler,
-    useCallback,
-    useContext,
-    useEffect,
-    useMemo,
-    useRef,
-    useState
-} from 'react';
+import { MouseEventHandler, TouchEventHandler, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import './styles.scss';
 import classNames from 'classnames';
 
@@ -24,14 +14,9 @@ export function RadialNumberSelect({ name, initialValue, onValueSet, close, hide
     let [isOpen, setIsOpen] = useState(false);
     let [total, setTotal] = useState(initialValue);
     let [isSecond, setIsSecond] = useState(false);
-    const overlayContext = useContext(NumberSelectOverlayContext);
+
     useEffect(() => {
-        setIsOpen(true);
-        overlayContext.setIsOpened(true);
-        return () => {
-            setIsOpen(false);
-            overlayContext.setIsOpened(false);
-        }
+        requestAnimationFrame(() => setIsOpen(true));
     }, []);
 
     let firstElementRef = useRef<HTMLDivElement>(null);
@@ -180,8 +165,3 @@ export function RadialNumberSelect({ name, initialValue, onValueSet, close, hide
         </div>
     </div>
 }
-
-export const NumberSelectOverlayContext = createContext({
-    isOpened: false, setIsOpened: (v: boolean) => {
-    }
-});

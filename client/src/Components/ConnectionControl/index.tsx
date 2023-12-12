@@ -13,6 +13,7 @@ import { CopyToClipboard } from '../CopyToClipboard';
 import { ClientHash } from './ClientHash';
 import { omitKeys } from '../../utils/pick';
 import classNames from 'classnames';
+import { useLocalize } from '../../localisation';
 
 export function ConnectionControl() {
     const status = useAppSelector(state => state.connection.status);
@@ -25,6 +26,8 @@ export function ConnectionControl() {
     const joinTextRef = useRef<HTMLInputElement>(null);
 
     const dispatch = useAppDispatch();
+
+    const t = useLocalize();
 
     const createRoom = useCallback(async () => {
         await dispatch(ensureConnectionAction()).unwrap();
@@ -54,24 +57,25 @@ export function ConnectionControl() {
             isDrawerOpened
                 ? <>
                     <p onClick={ closeDrawer } className={'ConnectionControl-expandedHeader'}><ConnectionIcon
-                        status={ status }/> { status == 'Room not found' ? status + ` (${ lastRoomId })` : status }</p>
+                        status={ status }/> { status == 'Room not found' ? t(status) + ` (${ lastRoomId })` : t(status) }</p>
                     {
                         roomId ? <>
-                            <p>Room ID: <CopyToClipboard copyText={ roomHref }>{ roomId }</CopyToClipboard></p>
-                            <p>Player count: { playerCount }</p>
+                            <p>{t('Room ID')}: <CopyToClipboard copyText={ roomHref }>{ roomId }</CopyToClipboard></p>
+                            <p>{t('Player count')}: { playerCount }</p>
                         </> : null
                     }
                     <ClientHash connectionId={ connectionId }/>
                     <div className={ 'ConnectionControl-buttonsHorContainer' }>
-                        <button onClick={ createRoom }>New Room</button>
-                        <button onClick={ disconnectCb } disabled={ !isConnected }>Disconnect</button>
+                        <button onClick={ createRoom }>{t('New Room')}</button>
+                        <button onClick={ disconnectCb } disabled={ !isConnected }>{t('Disconnect')}</button>
                     </div>
                     <form onSubmit={ joinRoom }>
-                        <input type="text" placeholder="Room ID" disabled={ isWaitingForServer } ref={ joinTextRef }
+                        <input type="text" placeholder={t("Room ID")} disabled={ isWaitingForServer } ref={ joinTextRef }
                                inputMode="numeric" pattern="[0-9]*"
                                value={ editRoomId }
                                onChange={ e => setEditRoomId(e.currentTarget.value) }/>
-                        <button type={ 'submit' } disabled={ isWaitingForServer || !isValidRoomId(editRoomId) }>Join
+                        <button type={ 'submit' } disabled={ isWaitingForServer || !isValidRoomId(editRoomId) }>
+                            {t('Join')}
                         </button>
                     </form>
                     <div role={ 'button' } className={ 'collapse-button' } onClick={ closeDrawer }>

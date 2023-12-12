@@ -33,6 +33,7 @@ export interface Character {
     isEnemy: boolean;
     isActive: boolean;
     isDisabled: boolean;
+    avatar: string | null;
 }
 
 export interface InitiativeState {
@@ -46,10 +47,10 @@ export interface InitiativeState {
 }
 
 const initCharacters: Character[] = [
-    { id: 0, name: 'Voidwarden', initiative: null, isEnemy: false },
-    { id: 1, name: 'Demolitionist', initiative: null, isEnemy: false },
-    { id: 2, name: 'Red Guard', initiative: null, isEnemy: false },
-    { id: 3, name: 'Hatchet', initiative: null, isEnemy: false },
+    { id: 0, name: 'Voidwarden', initiative: null, isEnemy: false, avatar: 'voidwarden.png' },
+    { id: 1, name: 'Demolitionist', initiative: null, isEnemy: false, avatar: 'demolitionist.png' },
+    { id: 2, name: 'Red Guard', initiative: null, isEnemy: false, avatar: 'red-guard.png' },
+    { id: 3, name: 'Hatchet', initiative: null, isEnemy: false, avatar: 'hatchet.png' },
 ].map(c => ({
     ...c,
     secondaryInitiative: null,
@@ -104,6 +105,7 @@ export const initiativeSlice = createSlice({
                 isEnemy: false,
                 name: '',
                 initiative: null,
+                avatar: null,
                 secondaryInitiative: null,
                 isDisabled: false,
                 ...action.payload,
@@ -179,6 +181,14 @@ export const initiativeSlice = createSlice({
                 op: 'replace',
                 path: `$.characters[?(@.id==${ action.payload.id })].name`,
                 value: action.payload.name
+            });
+        },
+
+        setActorAvatar: (state, action: PayloadAction<{ id: number, avatar: string }>) => {
+            updateQueue(state, {
+                op: 'replace',
+                path: `$.characters[?(@.id==${ action.payload.id })].avatar`,
+                value: action.payload.avatar
             });
         },
 
@@ -422,7 +432,7 @@ export const {
     nextCharacter,
     toggleDisabled,
     applyState,
-    clearPatchQueue,
+    clearPatchQueue
 } = initiativeSlice.actions;
 
 

@@ -1,0 +1,41 @@
+.SelectAvatarList {
+
+  &-wrapper {
+    position: absolute;
+    z-index: 999;
+    padding: 1rem;
+    max-height: 80vh;
+    overflow: auto;
+
+    &.enemy {
+      --border: #8a1b1b;
+      --bg: #3b1d1d;
+    }
+
+    &.character {
+      --border: #537f86;
+      --bg: #162d2d;
+    }
+  }
+
+  &-item {
+    cursor: pointer;
+    border: 4px solid var(--border);
+    color: white;
+    z-index: 1;
+    width: 50vmin;
+    height: 5vmin;
+    margin: 1rem 0.5rem;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+    display: flex;
+    border-radius: 5px;
+    line-height: 3vmin;
+    background: linear-gradient(to left, #66666650, var(--bg), var(--bg)), var(--url) no-repeat center right;
+
+    &.empty {
+      background: var(--bg);
+    }
+  }
+}

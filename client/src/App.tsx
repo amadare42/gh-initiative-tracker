@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import './App.scss';
 import { Charlist } from './Components/Charlist';
-import { NumberSelectOverlayContext } from './Components/RadialNumberSelect';
 import { RoundCounter } from './Components/RoundCounter';
 import { ButtonsList } from './Components/ButtonsList';
 import { ManageButtons } from './Components/ManageButtons';
@@ -12,25 +11,42 @@ import { ConnectionControl } from './Components/ConnectionControl';
 import { useDeeplink } from './hooks/useDeeplink';
 import { ElementsPanel } from './Components/ElementsPanel';
 import { omitKeys } from './utils/pick';
+import { OverlayContext } from './utils/overlay';
+import { usePrefetchImages } from './Components/SelectAvatarList';
+import { LocalizationProvider } from './localisation';
+import { ChangeLocale } from './Components/ChangeLocale';
 
 function App() {
 
     useDeeplink();
+    usePrefetchImages();
 
-    const [isOverlayOpened, setIsOverlayOpened] = useState(false);
+    const [overlay, setOverlay] = useState<JSX.Element>(null);
+
     return (
         <div className="App">
-            <NumberSelectOverlayContext.Provider value={ { isOpened: isOverlayOpened, setIsOpened: setIsOverlayOpened } }>
-                <header className="App-header">
-                    <ConnectionControl/>
-                    <ManageButtons/>
-                    <RoundCounter/>
-                    <ElementsPanel />
-                    <Charlist/>
-                    <ButtonsList/>
-                </header>
-            </NumberSelectOverlayContext.Provider>
-            <Debug/>
+            <LocalizationProvider>
+                <OverlayContext.Provider value={ { setOverlay } }>
+                    <header className="App-header">
+                        <ConnectionControl/>
+                        <ManageButtons/>
+                        <RoundCounter/>
+                        <ElementsPanel/>
+                        <Charlist/>
+                        <ButtonsList/>
+                        <ChangeLocale />
+
+                        { overlay
+                            ? <>
+                                <div className={ 'overlay' } onClick={ () => setOverlay(null) }/>
+                                { overlay }
+                            </>
+                            : null
+                        }
+                    </header>
+                </OverlayContext.Provider>
+                <Debug/>
+            </LocalizationProvider>
         </div>
     );
 }
