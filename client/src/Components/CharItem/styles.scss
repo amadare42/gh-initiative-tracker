@@ -27,7 +27,7 @@
     align-items: center;
     justify-content: space-between;
     transition: transform 0.2s ease-in-out;
-    background: linear-gradient(to left, #66666650, var(--bg), var(--bg)), var(--url) no-repeat center right;
+    background: linear-gradient(to left, #66666650, var(--bg) 40%, var(--bg)), var(--url) no-repeat center right;
 
     &.noImage {
       background: var(--bg);

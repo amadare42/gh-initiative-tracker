@@ -21,7 +21,7 @@
   font-size: calc(10px + 2vmin);
 
   & img {
-    height: 6vmin;
-    width: 6vmin;
+    height: max(3vmin, 2.5rem, 4vh);
+    width: max(3vmin, 2.5rem, 4vh);
   }
 }

@@ -339,7 +339,7 @@ export const initiativeSlice = createSlice({
         },
 
         applyPatches: (state, action: PayloadAction<PatchOp[]>) => {
-            performPatch(state, ...action.payload);
+            performPatch(state, action.payload);
         },
         clearPatchQueue: (state) => {
             state.patchesQueue = [];
@@ -361,7 +361,7 @@ function getNewHistoryEntry(state: InitiativeState) {
 }
 
 function updateQueue(state: InitiativeState, ...patches: any[]) {
-    performPatch(state, ...patches);
+    performPatch(state, patches);
     state.patchesQueue = [
         ...state.patchesQueue,
         ...patches
