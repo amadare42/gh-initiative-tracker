@@ -7,10 +7,10 @@ describe('patching', () => {
         const obj = {
             array
         }
-        const result = performPatch(obj, {
+       const { result } = performPatch(obj, [{
             op: 'remove',
             path: '$.array[1]'
-        });
+        }]);
         expect(result).toStrictEqual({
             array: [1, 3]
         })
@@ -21,10 +21,10 @@ describe('patching', () => {
         const obj = {
             array
         }
-        const result = performPatch(obj, {
+       const { result } = performPatch(obj, [{
             op: 'remove',
             path: '$.array[2]'
-        });
+        }]);
         expect(result).toStrictEqual({
             array: [1, 2]
         })
@@ -35,10 +35,10 @@ describe('patching', () => {
         const obj = {
             array
         }
-        const result = performPatch(obj, {
+       const { result } = performPatch(obj, [{
             op: 'remove',
             path: '$.array[0]'
-        });
+        }]);
         expect(result).toStrictEqual({
             array: [2, 3]
         })
@@ -49,10 +49,10 @@ describe('patching', () => {
         const obj = {
             array
         }
-        const result = performPatch(obj, {
+       const { result } = performPatch(obj, [{
             op: 'remove',
             path: '$.array[?(@.idx==2)]'
-        });
+        }]);
         expect(result).toStrictEqual({
             array: [{ idx: 1 }, { idx: 3 }]
         })
@@ -63,11 +63,11 @@ describe('patching', () => {
         const obj = {
             array
         }
-        const result = performPatch(obj, {
+       const { result } = performPatch(obj, [{
             op: 'add',
             path: '$.array[1]',
             value: 42
-        });
+        }]);
         expect(result).toStrictEqual({
             array: [1, 42, 2, 3]
         })
@@ -78,11 +78,11 @@ describe('patching', () => {
         const obj = {
             array
         }
-        const result = performPatch(obj, {
+       const { result } = performPatch(obj, [{
             op: 'add',
             path: '$.array[-]',
             value: 42
-        });
+        }]);
         expect(result).toStrictEqual({
             array: [1, 2, 3, 42]
         })
@@ -93,11 +93,11 @@ describe('patching', () => {
         const obj = {
             array
         }
-        const result = performPatch(obj, {
+       const { result } = performPatch(obj, [{
             op: 'add',
             path: '$.array[-]',
             value: 42
-        });
+        }]);
         expect(result).toStrictEqual({
             array: [42]
         })
@@ -108,11 +108,11 @@ describe('patching', () => {
         let obj = {
             field: 42
         }
-        const result = performPatch(obj, {
+       const { result } = performPatch(obj, [{
             op: 'replace',
             path: '$.field',
             value: 43
-        });
+        }]);
         expect(result).toStrictEqual({
             field: 43
         })
@@ -123,11 +123,11 @@ describe('patching', () => {
         const obj = {
             array
         }
-        const result = performPatch(obj, {
+       const { result } = performPatch(obj, [{
             op: 'replace',
             path: '$.array[1]',
             value: 42
-        });
+        }]);
         expect(result).toStrictEqual({
             array: [1, 42, 3]
         })
@@ -137,7 +137,7 @@ describe('patching', () => {
         let obj = {
             field: 1
         }
-        const result = performPatch(obj, {
+       const { result } = performPatch(obj, [{
             op: 'replace',
             path: '$.field',
             value: 2
@@ -149,10 +149,22 @@ describe('patching', () => {
             op: 'replace',
             path: '$.field',
             value: 4
-        });
+        }]);
         expect(result).toStrictEqual({
             field: 2
         })
         expect(result).toBe(obj);
+    });
+
+    it('[test] should return isTestFailed=true if test fails', () => {
+        let obj = {
+            field: 1
+        }
+       const { isTestFailed } = performPatch(obj, [{
+            op: 'test',
+            path: '$.field',
+            value: 2
+        }]);
+        expect(isTestFailed).toBe(true);
     });
 })

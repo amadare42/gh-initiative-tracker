@@ -126,7 +126,6 @@ export const roomsTable = {
         return result.Items.map((item: any) => item.roomId.S as string);
     },
     addOrUpdate: async (room: RoomEntry) => {
-        // TODO: ensure it will create or update
         await ddb.updateItem({
             TableName: ROOM_TABLE,
             Key: marshall({ roomId: room.id }),
@@ -163,6 +162,7 @@ export const roomsTable = {
         return !!result.Item;
     },
     moveExpiration: async (id: string) => {
+        const expiration = getExpiration(ROOM_TTL);
         await ddb.updateItem({
             TableName: ROOM_TABLE,
             Key: {
@@ -170,8 +170,13 @@ export const roomsTable = {
             },
             UpdateExpression: 'set expire = :expire',
             ExpressionAttributeValues: {
-                ':expire': { N: getExpiration(ROOM_TTL).toString() }
+                ':expire': { N: expiration.toString() }
             }
         });
+        return expiration;
     }
 }
+
+
+export type RoomsTable = typeof roomsTable;
+export type ConnectionsTable = typeof connectionsTable;

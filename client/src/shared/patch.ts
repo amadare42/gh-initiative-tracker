@@ -71,10 +71,16 @@ function replace(obj: any, path: PathComponent[], patchOp: { op: 'replace'; path
     }
 }
 
-export function performPatch(obj: any, ...patches: PatchOp[]) {
-    let shouldStop = false;
+interface PatchResult {
+    result: any;
+    isTestFailed: boolean;
+}
+
+export function performPatch(obj: any, patches: PatchOp[]) {
+    const result: PatchResult = { result: obj, isTestFailed: false };
+
     for (let patchOp of patches) {
-        if (shouldStop) {
+        if (result.isTestFailed) {
             break;
         }
         let patchOpPath = patchOp.path;
@@ -102,7 +108,7 @@ export function performPatch(obj: any, ...patches: PatchOp[]) {
 
                 case 'test': {
                     const value = jsonPath.value(obj, jsonPath.stringify(path));
-                    shouldStop = JSON.stringify(value) !== JSON.stringify(patchOp.value);
+                    result.isTestFailed = JSON.stringify(value) !== JSON.stringify(patchOp.value);
 
                     break;
                 }
@@ -110,5 +116,5 @@ export function performPatch(obj: any, ...patches: PatchOp[]) {
         }
     }
 
-    return obj;
+    return result;
 }

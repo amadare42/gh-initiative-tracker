@@ -42,7 +42,9 @@ export const roomsTable: RoomsTable = {
     },
     moveExpiration: async (id) => {
         const stmt = db.prepare('UPDATE rooms SET expire = ? WHERE id = ?');
-        stmt.run( Date.now() + ROOM_TTL, id);
+        const expiration = Date.now() + ROOM_TTL;
+        stmt.run( expiration, id);
+        return expiration;
     }
 }
 
