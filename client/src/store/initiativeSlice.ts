@@ -2,6 +2,8 @@ import { createAction, createSelector, createSlice, PayloadAction } from '@redux
 import { useAppSelector } from './index';
 import { createAppAsyncThunk } from './createAppAsyncThunk';
 import { PatchOp, performPatch } from '../shared';
+import { omitKeys } from '../utils/pick';
+import hashSum from 'hash-sum';
 
 export interface HistoryEntry {
     round: number;
@@ -422,6 +424,14 @@ export const isLastActorSelector = createSelector(
         const currentCharacterIdx = characters.findIndex(actor => actor.id === activeCharacterId);
         return currentCharacterIdx + 1 >= characters.length && characters.length > 0;
     });
+
+export const getRoomHashSelector = createSelector(
+    (state: InitiativeState) => state,
+    (state) => {
+        const hasheableState = omitKeys(state, ['patchesQueue']);
+        return hashSum(hasheableState);
+    }
+);
 
 
 export const {

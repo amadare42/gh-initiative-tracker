@@ -71,12 +71,12 @@ function replace(obj: any, path: PathComponent[], patchOp: { op: 'replace'; path
     }
 }
 
-interface PatchResult {
-    result: any;
+interface PatchResult<T = any> {
+    result: T;
     isTestFailed: boolean;
 }
 
-export function performPatch(obj: any, patches: PatchOp[]) {
+export function performPatch<T>(obj: T, patches: PatchOp[]): PatchResult<T> {
     const result: PatchResult = { result: obj, isTestFailed: false };
 
     for (let patchOp of patches) {

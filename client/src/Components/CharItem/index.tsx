@@ -42,6 +42,11 @@ export const CharItem = forwardRef((props: Props, ref: ForwardedRef<HTMLDivEleme
     const isEditingName = props.editingId === props.id;
     const localizedName = t(name);
 
+    // NOTE: This is not done with inline styles inside of putting url to variable because on WebKit will
+    //       recalculate CSS variables on DOM change. So image will be flickering.
+    //       https://github.com/ionic-team/ionic-framework/issues/17494#issuecomment-492647992
+    const cssBackground = avatarUrl ? `linear-gradient(to left, #66666650, var(--bg) 300px), url('${ avatarUrl }') no-repeat center right` : null;
+
     return <div className={ classNames('CharItem-wrapper', {
         enemy: props.isEnemy,
         player: !props.isEnemy,
@@ -49,7 +54,7 @@ export const CharItem = forwardRef((props: Props, ref: ForwardedRef<HTMLDivEleme
         active: props.isActive,
         haveSecondary: haveSecondaryInitiative,
         noImage: !props.avatar
-    }) } style={ { '--url': `url(${ avatarUrl })` } as any } ref={ innerRef }>
+    }) } style={ { background: cssBackground }} ref={ innerRef }>
         <div className={ 'CharItem-background' }/>
         { !isEditingName ? <>
             <InitiativeControl { ...props } name={localizedName} isSecondary={ false }/>

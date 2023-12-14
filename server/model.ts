@@ -22,6 +22,12 @@ export interface ConnectionEntry {
 
 export interface RoomEntry {
     id: string;
-    state: any;
+    state: RoomState;
+    hash: string;
     expire?: number;
+}
+
+export type RoomState = {
+    // NOTE: this is a hack to make sure that RoomStatePayload is not assignable to RoomState or RoomEntry
+    state: never;
 }

@@ -2,11 +2,26 @@ import { DynamoDB } from '@aws-sdk/client-dynamodb';
 import { ConnectionEntry, RoomEntry } from '../model';
 import { marshall } from '@aws-sdk/util-dynamodb';
 
-const ddb = new DynamoDB();
+const ddb = createDDBClient();
 
-const CONNECTIONS_TABLE = process.env.CONNECTIONS_TABLE || 'gh-turns_connections';
-const CONNECTIONS_TTL = process.env.CONNECTIONS_TTL ? parseInt(process.env.CONNECTIONS_TTL) : 60 * 5;
-const NULL_PLACEHOLDER = "[[NULL]]";
+function createDDBClient() {
+    if (process.env.USE_ACCESS_KEY?.toLowerCase() !== 'true') {
+        console.log('Using AWS DynamoDB client with default credentials');
+        return new DynamoDB();
+    }
+
+    console.log('Using AWS DynamoDB client with AWS_ACCESS_KEY');
+    const credentials = {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    };
+    return new DynamoDB({
+        credentials: credentials, region: process.env.AWS_REGION
+    });
+}
+
+const NULL_PLACEHOLDER = '[[NULL]]';
+
 function nullStr(str: string | null) {
     if (!str) {
         return NULL_PLACEHOLDER;
@@ -23,6 +38,8 @@ function fromNullStr(str: string) {
 
 export const getExpiration = (ttl: number) => Math.floor((Date.now() / 1000)) + ttl;
 
+const CONNECTIONS_TABLE = process.env.CONNECTIONS_TABLE || 'gh-turns_connections';
+const CONNECTIONS_TTL = process.env.CONNECTIONS_TTL ? parseInt(process.env.CONNECTIONS_TTL) : 60 * 5;
 export const connectionsTable = {
     put: async (connection: ConnectionEntry) => {
         await ddb.putItem({
@@ -125,15 +142,18 @@ export const roomsTable = {
         });
         return result.Items.map((item: any) => item.roomId.S as string);
     },
-    addOrUpdate: async (room: RoomEntry) => {
+    addOrUpdate: async (room: RoomEntry, lockingHash?: string) => {
         await ddb.updateItem({
             TableName: ROOM_TABLE,
             Key: marshall({ roomId: room.id }),
-            UpdateExpression: 'set roomJson = :roomJson, expire = :expire',
+            UpdateExpression: 'set roomJson = :roomJson, expire = :expire, roomHash = :roomHash',
             ExpressionAttributeValues: {
                 ':roomJson': { S: JSON.stringify(room.state) },
-                ':expire': { N: getExpiration(ROOM_TTL).toString() }
-            }
+                ':expire': { N: getExpiration(ROOM_TTL).toString() },
+                ':roomHash': { S: room.hash },
+                ':lockingHash': { S: lockingHash || room.hash }
+            },
+            ConditionExpression: 'attribute_not_exists(roomHash) or roomHash = :lockingHash',
         });
     },
     get: async (id: string) => {
@@ -149,8 +169,22 @@ export const roomsTable = {
         return {
             id: result.Item.roomId.S,
             state: JSON.parse(result.Item.roomJson.S),
-            expire: parseInt(result.Item.expire.N)
+            expire: parseInt(result.Item.expire.N),
+            hash: result.Item.roomHash.S
         } as RoomEntry;
+    },
+    getRoomHash: async (id: string) => {
+        let result = await ddb.getItem({
+            TableName: ROOM_TABLE,
+            Key: {
+                roomId: { S: id }
+            },
+            ProjectionExpression: 'roomHash'
+        });
+        if (!result.Item) {
+            return null;
+        }
+        return result.Item.roomHash.S;
     },
     hasRoom: async (id: string) => {
         let result = await ddb.getItem({
@@ -176,7 +210,3 @@ export const roomsTable = {
         return expiration;
     }
 }
-
-
-export type RoomsTable = typeof roomsTable;
-export type ConnectionsTable = typeof connectionsTable;

@@ -1,8 +1,8 @@
 import sqlite3 from 'better-sqlite3';
-import { ConnectionEntry, ConnectionsTable, RoomEntry, RoomsTable } from '../model';
+import { ConnectionEntry, ConnectionsTable, RoomsTable } from '../model';
 
 const db = sqlite3('local.db');
-db.exec("CREATE TABLE IF NOT EXISTS rooms (id TEXT PRIMARY KEY UNIQUE, state TEXT, expire INTEGER)");
+db.exec("CREATE TABLE IF NOT EXISTS rooms (id TEXT PRIMARY KEY UNIQUE, state TEXT, expire INTEGER, hash TEXT)");
 db.exec("CREATE TABLE IF NOT EXISTS connections (connectionId TEXT PRIMARY KEY UNIQUE, clientId TEXT, roomId TEXT, expire INTEGER)");
 
 const ROOM_TTL = process.env.ROOM_TTL ? parseInt(process.env.ROOM_TTL) : 1000 * 60 * 60 * 2;
@@ -17,22 +17,32 @@ export const roomsTable: RoomsTable = {
         const stmt = db.prepare('SELECT id FROM rooms');
         return stmt.all() as string[];
     },
-    addOrUpdate: async (room) => {
-        const stmt = db.prepare('INSERT OR REPLACE INTO rooms (id, state, expire) VALUES (?, ?, ?)');
-        stmt.run(room.id, JSON.stringify(room.state), Date.now() + ROOM_TTL);
+    addOrUpdate: async (room, lockingHash: string) => {
+        const stmt = db.prepare('INSERT OR REPLACE INTO rooms (id, state, expire, hash) VALUES (?, ?, ?, ?)');
+        stmt.run(room.id, JSON.stringify(room.state), Date.now() + ROOM_TTL, room.hash);
     },
     get: async (id) => {
         clearExpiredRooms();
-        const stmt = db.prepare('SELECT state, expire FROM rooms WHERE id = ?');
-        const row = stmt.get(id) as RoomEntry;
+        const stmt = db.prepare('SELECT state, expire, hash FROM rooms WHERE id = ?');
+        const row = stmt.get(id) as any;
         if (!row) {
             return null;
         }
         return {
             id,
             state: JSON.parse(row.state),
+            hash: row.hash,
             expire: row.expire
         };
+    },
+    getRoomHash: async (id) => {
+        clearExpiredRooms();
+        const stmt = db.prepare('SELECT hash FROM rooms WHERE id = ?');
+        const row = stmt.get(id) as any;
+        if (!row) {
+            return null;
+        }
+        return row.hash;
     },
     hasRoom: async (id) => {
         clearExpiredRooms();

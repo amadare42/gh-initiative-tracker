@@ -1,12 +1,9 @@
-import { clearAllConnections } from './local/db';
-
 require('dotenv').config();
 
+import { clearAllConnections } from './local/db';
 import { HandlerContext, handlers, SendMessageFn } from './handlers';
 import { generateWsUniqueId } from './util';
 import { WebSocket } from 'ws';
-
-import * as fs from 'fs';
 import * as https from 'https';
 
 var express = require('express');
@@ -38,7 +35,12 @@ const sendMsg: SendMessageFn = async (connectionId, msg) => {
     }
     const ws = connectedWs[connectionId];
     if (ws) {
+            console.log('ws readiness', ws.readyState);
+        // spinloop until ws is ready
+        await new Promise(resolve => setTimeout(resolve, 100));
         ws.send(msg);
+    } else {
+        console.log('cannot find ws for connectionId', connectionId);
     }
 }
 async function inCtx(connectionId: string, fn: (ctx: HandlerContext) => Promise<void>) {

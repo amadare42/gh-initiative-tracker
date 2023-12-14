@@ -1,10 +1,13 @@
 import { createAppAsyncThunk } from './createAppAsyncThunk';
-import { initiativeSliceActions, InitiativeState } from './initiativeSlice';
+import { getRoomHashSelector, initiativeSliceActions, InitiativeState } from './initiativeSlice';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { CallbackEvent } from '../utils/callbackEvent';
 import { PatchOp } from '../shared';
+import { store } from './index';
 
 const MESSAGE_COUNT = 10;
+const VERIFY_HASH_INTERVAL = 1500;
+const PING_INTERVAL = 10000;
 const CONNECTION_ID_KEY = 'store.serverConnection.connectionId';
 const SERVER_URL = (process.env.NODE_ENV === 'production' || process.env.REACT_APP_USE_PROD_SERVER)
     ? 'wss://api.turns.amadare.top'
@@ -52,6 +55,7 @@ export type WsMessage =
     | WsMessageBase<'room.applyPatches', { patches: PatchOp[], hash: string }>
     | WsMessageBase<'connection.setId', { id: string }>
     | WsMessageBase<'room.requestUpdate', { roomId: string }>
+    | WsMessageBase<'room.checkHash', { hash: string }>
     | WsMessageBase<'room.patch', { roomId: string, hash: string, patch: PatchOp[] }>;
 export type PayloadFor<Type extends WsMessage['type']> = Extract<WsMessage, { type: Type }>['payload'];
 
@@ -65,6 +69,7 @@ export type CreateRoomPayload = {
 
 let ws: WebSocket | null = null;
 let pingInterval: ReturnType<typeof setTimeout> | null = null;
+let delayedUpdateInterval: ReturnType<typeof setTimeout> | null = null;
 let reconnectInterval: ReturnType<typeof setTimeout> | null = null;
 const connectedEvent = new CallbackEvent();
 
@@ -97,7 +102,26 @@ function setPingInterval() {
     if (pingInterval) {
         clearInterval(pingInterval);
     }
-    pingInterval = setInterval(ping, 10000);
+    pingInterval = setInterval(ping, PING_INTERVAL);
+}
+
+
+function delayedUpdate() {
+    if (!ws || ws.readyState !== ws.OPEN) {
+        return;
+    }
+
+    const { initiative } = store.getState();
+    sendMsg('room.checkHash', { hash: getRoomHashSelector(initiative) });
+    console.log('checking hash')
+}
+
+function scheduleVerifyHash() {
+    if (delayedUpdateInterval) {
+        return;
+    }
+
+    setTimeout(delayedUpdate, VERIFY_HASH_INTERVAL);
 }
 
 export const ensureConnectionAction = createAppAsyncThunk(
@@ -123,6 +147,7 @@ export const connectAction = createAppAsyncThunk(
         let url = new URL(SERVER_URL);
         url.searchParams.set('clientId', connectionId);
         ws = new WebSocket(url.toString());
+        window['ws'] = ws;
         dispatch(serverConnectionSliceActions.setWsActive(true));
         dispatch(serverConnectionSliceActions.connecting());
         ws.onopen = () => {
@@ -142,6 +167,7 @@ export const connectAction = createAppAsyncThunk(
                 dispatch(serverConnectionSliceActions.disconnected());
             }
             clearInterval(pingInterval);
+            clearInterval(delayedUpdateInterval);
         }
         ws.onmessage = (message) => {
             if (message.data === 'pong') {
@@ -211,7 +237,7 @@ export const onMessageAction = createAppAsyncThunk('onMessage', async ({ message
             case 'room.applyPatches': {
                 const { patches } = message.data;
                 dispatch(initiativeSliceActions.applyPatches(patches));
-                // dispatch(serverConnectionSliceActions.setPlayerCount(playersConnected));
+                scheduleVerifyHash();
                 break;
             }
 
@@ -228,13 +254,6 @@ export const onMessageAction = createAppAsyncThunk('onMessage', async ({ message
             case 'connection.idSet': {
                 const { id } = message.data;
                 dispatch(serverConnectionSliceActions.setConnectionId(id));
-                break;
-            }
-
-            case 'room.patch.hashMismatch': {
-                const { roomState } = message.data;
-                dispatch(initiativeSliceActions.applyState(roomState));
-                dispatch(serverConnectionSliceActions.addMessage(`Please try again`));
                 break;
             }
         }

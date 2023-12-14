@@ -1,23 +1,18 @@
 import { createListenerMiddleware } from '@reduxjs/toolkit';
-import { pushRoomPatches, pushRoomStateAction } from './serverConnectionSlice';
+import { pushRoomPatches } from './serverConnectionSlice';
 import { store } from './index';
-import { clearPatchQueue } from './initiativeSlice';
-import hashSum from 'hash-sum';
-import { omitKeys } from '../utils/pick';
+import { clearPatchQueue, getRoomHashSelector } from './initiativeSlice';
 
-const pushState = () => store.dispatch(pushRoomStateAction({
-    state: omitKeys(store.getState().initiative, ['patchesQueue'])
-}));
 const pushPatches = () => {
     const state = store.getState();
     const patches = state.initiative.patchesQueue;
     if (!patches.length) {
         return;
     }
-    const hasheableState = omitKeys(state.initiative, ['patchesQueue']);
+    const hash = getRoomHashSelector(state.initiative);
     store.dispatch(pushRoomPatches({
         patches: patches,
-        hash: hashSum(hasheableState)
+        hash
     }));
     store.dispatch(clearPatchQueue())
 };

@@ -1,4 +1,4 @@
-import { ConnectionEntry, Message, RoomEntry, RoomStatePayload } from './model';
+import { ConnectionEntry, Message, RoomEntry, RoomState, RoomStatePayload } from './model';
 import { generateRoomId } from './util';
 import { connectionsTable, roomsTable } from './db';
 import { PatchOp, performPatch } from '../client/src/shared';
@@ -55,8 +55,9 @@ export const handlers = createHandlers({
     'ws.ping': async ({ connectionId }) => {
         // move expiration only once per 2 minutes
         let expiration = connectionExpirations[connectionId];
-        if (!expiration || expiration > Date.now() + 1000 * 60 * 2) {
+        if (!expiration || expiration > (Date.now() / 1000) + 60 * 2) {
             expiration = await connectionsTable.moveExpiration(connectionId);
+            console.log('moved expiration for connection', connectionId, expiration);
             connectionExpirations[connectionId] = expiration;
         }
     },
@@ -75,7 +76,7 @@ export const handlers = createHandlers({
                 throw new Error('Failed to generate room id');
             }
         }
-        const room: RoomEntry = { id, state: payload.state };
+        const room: RoomEntry = { id, state: payload.state, hash: hashSum(payload.state) };
         await roomsTable.addOrUpdate(room);
         await connectionsTable.linkConnectionToRoom(connectionId, room.id);
         await sendWelcome(sendMsg, connection, room);
@@ -149,7 +150,8 @@ export const handlers = createHandlers({
 
         await roomsTable.addOrUpdate({
             id: connection.roomId,
-            state: payload.state
+            state: payload.state,
+            hash: hashSum(payload.state)
         });
 
         let connectionIds = await connectionsTable.getConnectionIdsForRoom(connection.roomId);
@@ -168,8 +170,7 @@ export const handlers = createHandlers({
             return;
         }
         const connection = await connectionsTable.get(connectionId);
-        let roomEntry: RoomEntry = await roomsTable.get(connection.roomId);
-        if (!connection || !connection.roomId || !roomEntry) {
+        if (!connection || !connection.roomId || !(await roomsTable.hasRoom(connection.roomId))) {
             console.log(`Room ${ connection.roomId } not found`);
             await sendMsg(connectionId, {
                 type: 'room.notFound',
@@ -178,35 +179,32 @@ export const handlers = createHandlers({
             return;
         }
 
-        const newState = performPatch(roomEntry.state, ...payload.patches);
-        await roomsTable.addOrUpdate({
-            id: connection.roomId,
-            state: newState
-        });
+        let stateUpdate = await patchRoomWithOptimisticLocking(connection.roomId, payload.patches);
 
-        // broadcast patches
+        // if update failed, send full state (ignore patches)
+        if (!stateUpdate.success) {
+            console.log(`Failed to patch room ${ connection.roomId }`);
+            await sendRoomUpdate(sendMsg, connection, stateUpdate.state);
+            return;
+        }
+        console.log(`patching room ${ connection.roomId } succeeded`)
+
+        // send full state if hashes don't match
+        const newHash = stateUpdate.hash;
+        if (newHash !== payload.hash) {
+            console.log(`Hashes don't match: ${ newHash } !== ${ payload.hash }`);
+            await sendRoomUpdate(sendMsg, connection, stateUpdate.state);
+        }
+
+        // update succeeded: broadcast patches
         let connectionIds = await connectionsTable.getConnectionIdsForRoom(connection.roomId);
         connectionIds = connectionIds.filter(conId => conId !== connectionId);
         await broadcastMsg(sendMsg, {
             type: 'room.applyPatches',
             data: {
-                patches: payload.patches,
-                playersConnected: connectionIds.length + 1
+                patches: payload.patches
             }
         }, connectionIds);
-
-        // send full state if hashes don't match
-        const newHash = hashSum(newState);
-        if (newHash !== payload.hash) {
-            console.log(`Hashes don't match: ${ newHash } !== ${ payload.hash }`);
-            await sendMsg(connectionId, {
-                type: 'room.update',
-                data: {
-                    state: newState,
-                    playersConnected: connectionIds.length + 1
-                }
-            });
-        }
 
         tailend(roomsTable.moveExpiration(connection.roomId));
     },
@@ -231,13 +229,26 @@ export const handlers = createHandlers({
             });
             return;
         }
-        await sendMsg(connectionId, {
-            type: 'room.update',
-            data: {
-                state: room.state,
-            }
-        })
+        await sendRoomUpdate(sendMsg, connection, room.state);
         console.log(`Update requested for room ${ room.id } by ${ connection.connectionId } (clientId ${ connection.clientId })`);
+    },
+
+    'room.checkHash': async ({ connectionId, sendMsg }, payload: { hash: string }) => {
+        const connection = await connectionsTable.get(connectionId);
+        if (!connection || !connection.roomId) {
+            return;
+        }
+
+        const roomHash = await roomsTable.getRoomHash(connection.roomId);
+        if (!roomHash) {
+            return;
+        }
+
+        if (roomHash!== payload.hash) {
+            console.log(`Hashes don't match: ${ roomHash } !== ${ payload.hash }`);
+            const room = await roomsTable.get(connection.roomId);
+            await sendRoomUpdate(sendMsg, connection, room.state);
+        }
     },
 
     'connection.setId': async ({ connectionId, sendMsg }, { id }: { id: string }) => {
@@ -303,4 +314,50 @@ async function sendWelcome(sendMsg: SendMessageFn, connection: ConnectionEntry, 
         console.log('error sending welcome', e);
         throw e;
     }
+}
+
+async function sendRoomUpdate(sendMsg: SendMessageFn, { connectionId, roomId }: ConnectionEntry, state: RoomState) {
+    const playersConnected = await getPlayerConnectedCount(roomId);
+    await sendMsg(connectionId, {
+        type: 'room.update',
+        data: {
+            state, playersConnected
+        }
+    });
+}
+
+async function getPlayerConnectedCount(roomId: string) {
+    return (await connectionsTable.getConnectionIdsForRoom(roomId)).length;
+}
+
+async function patchRoomWithOptimisticLocking(roomId: string, patches: PatchOp[]) {
+    let newState: RoomState;
+    let lockingHash: string;
+
+    for (let i = 0; i < 10; i++) {
+        const roomEntry = await roomsTable.get(roomId);
+        lockingHash = hashSum(roomEntry.state);
+
+        const patchResult = performPatch(roomEntry.state, patches);
+        if (patchResult.isTestFailed) {
+            console.log('patch test failed, failing update')
+            break;
+        }
+        newState = patchResult.result;
+        const newHash = hashSum(newState);
+        console.log(`patching room ${ roomId } with hash ${ lockingHash } -> ${ newHash }`)
+
+        try {
+            await roomsTable.addOrUpdate({
+                id: roomId,
+                state: newState,
+                hash: newHash
+            }, lockingHash);
+            return { success: true, state: newState, hash: newHash };
+        } catch (e) {
+            console.log(`failed to update room, retrying #${ i }`, e);
+        }
+    }
+
+    return { success: false, state: newState, hash: lockingHash };
 }
