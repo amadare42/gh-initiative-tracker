@@ -6,7 +6,7 @@ import { PatchOp } from '../shared';
 import { store } from './index';
 
 const MESSAGE_COUNT = 10;
-const VERIFY_HASH_INTERVAL = 1500;
+const VERIFY_HASH_INTERVAL = 2500;
 const PING_INTERVAL = 10000;
 const CONNECTION_ID_KEY = 'store.serverConnection.connectionId';
 const SERVER_URL = (process.env.NODE_ENV === 'production' || process.env.REACT_APP_USE_PROD_SERVER)
@@ -118,10 +118,11 @@ function delayedUpdate() {
 
 function scheduleVerifyHash() {
     if (delayedUpdateInterval) {
+        clearTimeout(delayedUpdateInterval);
         return;
     }
 
-    setTimeout(delayedUpdate, VERIFY_HASH_INTERVAL);
+    delayedUpdateInterval = setTimeout(delayedUpdate, VERIFY_HASH_INTERVAL);
 }
 
 export const ensureConnectionAction = createAppAsyncThunk(
@@ -276,7 +277,10 @@ export const pushRoomStateAction = createAppAsyncThunk(
 
 export const pushRoomPatches = createAppAsyncThunk(
     'pushRoomPatches',
-    async (payload: PayloadFor<'room.applyPatches'>) => sendMsg('room.applyPatches', payload));
+    async (payload: PayloadFor<'room.applyPatches'>) => {
+        sendMsg('room.applyPatches', payload);
+        scheduleVerifyHash();
+    });
 
 export const refreshClientIdAction = createAppAsyncThunk(
     'refreshClientId',
